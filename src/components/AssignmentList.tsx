@@ -27,7 +27,8 @@ const AssignmentList = ({ classId, onAssignmentUpdate, isTeacher = false }: Assi
     // Simulate loading delay
     const timer = setTimeout(() => {
       if (classId) {
-        setAssignments(getAssignmentsForClass(classId));
+        // Filter assignments by classId
+        setAssignments(getAssignments().filter(assignment => assignment.classId === classId));
       } else {
         setAssignments(getAssignments());
       }

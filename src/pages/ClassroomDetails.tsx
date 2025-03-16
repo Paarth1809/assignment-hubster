@@ -10,6 +10,7 @@ import ClassHeader from "@/components/classroom/ClassHeader";
 import ClassTabs from "@/components/classroom/ClassTabs";
 import StreamTab from "@/components/classroom/StreamTab";
 import ClassworkTab from "@/components/classroom/ClassworkTab";
+import LiveTab from "@/components/classroom/LiveTab";
 import PeopleTab from "@/components/classroom/PeopleTab";
 import GradesTab from "@/components/classroom/GradesTab";
 import SettingsTab from "@/components/classroom/SettingsTab";
@@ -80,6 +81,13 @@ const ClassroomDetails = () => {
               <ClassworkTab 
                 classId={classroom.id} 
                 isTeacher={profile?.role === "teacher"}
+              />
+            </TabsContent>
+
+            <TabsContent value="live">
+              <LiveTab 
+                classId={classroom.id}
+                currentUser={profile}
               />
             </TabsContent>
 

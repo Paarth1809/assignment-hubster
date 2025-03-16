@@ -1,6 +1,6 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen, Users, FileText, MessageSquare, Settings } from "lucide-react";
+import { BookOpen, Users, FileText, MessageSquare, Settings, Video } from "lucide-react";
 
 interface ClassTabsProps {
   activeTab: string;
@@ -18,7 +18,7 @@ const ClassTabs = ({ activeTab, onTabChange, children }: ClassTabsProps) => {
           onValueChange={onTabChange} 
           className="w-full"
         >
-          <TabsList className="grid w-full max-w-2xl grid-cols-5">
+          <TabsList className="grid w-full max-w-3xl grid-cols-6">
             <TabsTrigger value="stream" className="gap-2">
               <MessageSquare className="h-4 w-4" />
               <span className="hidden sm:inline">Stream</span>
@@ -26,6 +26,10 @@ const ClassTabs = ({ activeTab, onTabChange, children }: ClassTabsProps) => {
             <TabsTrigger value="classwork" className="gap-2">
               <FileText className="h-4 w-4" />
               <span className="hidden sm:inline">Classwork</span>
+            </TabsTrigger>
+            <TabsTrigger value="live" className="gap-2">
+              <Video className="h-4 w-4" />
+              <span className="hidden sm:inline">Live</span>
             </TabsTrigger>
             <TabsTrigger value="people" className="gap-2">
               <Users className="h-4 w-4" />

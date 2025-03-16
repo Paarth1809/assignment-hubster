@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -12,7 +12,9 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Shield, User, Bell } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Shield, User, Bell, Palette, Languages } from 'lucide-react';
 import { UserProfile } from '@/utils/types';
 
 export default function Settings() {
@@ -26,6 +28,28 @@ export default function Settings() {
   const [email, setEmail] = useState(profile?.email || '');
   const [role, setRole] = useState<'student' | 'teacher'>(profile?.role || 'student');
   const [isUpdating, setIsUpdating] = useState(false);
+
+  // Notification preferences
+  const [emailNotifications, setEmailNotifications] = useState(profile?.preferences?.notifications?.email || false);
+  const [browserNotifications, setBrowserNotifications] = useState(profile?.preferences?.notifications?.browser || false);
+
+  // Theme settings
+  const [theme, setTheme] = useState(profile?.preferences?.theme || 'system');
+  
+  // Language settings
+  const [language, setLanguage] = useState(profile?.preferences?.language || 'en');
+
+  useEffect(() => {
+    if (profile) {
+      setName(profile.name || '');
+      setEmail(profile.email || '');
+      setRole(profile.role || 'student');
+      setEmailNotifications(profile.preferences?.notifications?.email || false);
+      setBrowserNotifications(profile.preferences?.notifications?.browser || false);
+      setTheme(profile.preferences?.theme || 'system');
+      setLanguage(profile.preferences?.language || 'en');
+    }
+  }, [profile]);
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,6 +80,64 @@ export default function Settings() {
       });
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  const handleUpdateNotifications = () => {
+    if (!profile) return;
+    
+    try {
+      const updatedProfile: UserProfile = {
+        ...profile,
+        preferences: {
+          ...profile.preferences,
+          notifications: {
+            email: emailNotifications,
+            browser: browserNotifications
+          }
+        }
+      };
+      
+      updateProfile(updatedProfile);
+      
+      toast({
+        title: 'Notification settings updated',
+        description: 'Your notification preferences have been saved.',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Update failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleUpdateAppearance = () => {
+    if (!profile) return;
+    
+    try {
+      const updatedProfile: UserProfile = {
+        ...profile,
+        preferences: {
+          ...profile.preferences,
+          theme,
+          language
+        }
+      };
+      
+      updateProfile(updatedProfile);
+      
+      toast({
+        title: 'Appearance settings updated',
+        description: 'Your appearance preferences have been saved.',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Update failed',
+        description: error.message,
+        variant: 'destructive',
+      });
     }
   };
 
@@ -115,6 +197,13 @@ export default function Settings() {
                     >
                       <Bell className="mr-2 h-4 w-4" />
                       Notifications
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="appearance" 
+                      className="w-full justify-start mb-1 data-[state=active]:bg-primary/10 p-2 rounded"
+                    >
+                      <Palette className="mr-2 h-4 w-4" />
+                      Appearance
                     </TabsTrigger>
                     <TabsTrigger 
                       value="security" 
@@ -210,10 +299,103 @@ export default function Settings() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-muted-foreground">
-                      Notification settings will be available in a future update.
-                    </p>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label>Email Notifications</Label>
+                          <p className="text-sm text-muted-foreground">
+                            Receive notifications about classroom activity via email
+                          </p>
+                        </div>
+                        <Switch 
+                          checked={emailNotifications}
+                          onCheckedChange={setEmailNotifications}
+                        />
+                      </div>
+                      
+                      <Separator />
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label>Browser Notifications</Label>
+                          <p className="text-sm text-muted-foreground">
+                            Allow push notifications in your browser
+                          </p>
+                        </div>
+                        <Switch 
+                          checked={browserNotifications}
+                          onCheckedChange={setBrowserNotifications}
+                        />
+                      </div>
+                    </div>
                   </CardContent>
+                  <CardFooter>
+                    <Button onClick={handleUpdateNotifications}>
+                      Save Notification Settings
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="appearance" className="mt-0">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Appearance Settings</CardTitle>
+                    <CardDescription>
+                      Customize how the application looks
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>Theme</Label>
+                        <RadioGroup 
+                          value={theme} 
+                          onValueChange={(value) => setTheme(value as 'light' | 'dark' | 'system')}
+                          className="flex flex-col space-y-1"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="light" id="theme-light" />
+                            <Label htmlFor="theme-light">Light</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="dark" id="theme-dark" />
+                            <Label htmlFor="theme-dark">Dark</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="system" id="theme-system" />
+                            <Label htmlFor="theme-system">System Default</Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
+                      
+                      <Separator />
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="language">Language</Label>
+                        <Select value={language} onValueChange={setLanguage}>
+                          <SelectTrigger id="language">
+                            <SelectValue placeholder="Select language" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="en">English</SelectItem>
+                            <SelectItem value="es">Español</SelectItem>
+                            <SelectItem value="fr">Français</SelectItem>
+                            <SelectItem value="de">Deutsch</SelectItem>
+                            <SelectItem value="zh">中文</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground">
+                          This will change the language for the user interface (preview feature)
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                  <CardFooter>
+                    <Button onClick={handleUpdateAppearance}>
+                      Save Appearance Settings
+                    </Button>
+                  </CardFooter>
                 </Card>
               </TabsContent>
               
@@ -226,10 +408,40 @@ export default function Settings() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-muted-foreground">
-                      Security settings will be available in a future update.
-                    </p>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="current-password">Current Password</Label>
+                        <Input 
+                          id="current-password"
+                          type="password"
+                          placeholder="Enter your current password"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="new-password">New Password</Label>
+                        <Input 
+                          id="new-password"
+                          type="password"
+                          placeholder="Enter your new password"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="confirm-password">Confirm New Password</Label>
+                        <Input 
+                          id="confirm-password"
+                          type="password"
+                          placeholder="Confirm your new password"
+                        />
+                      </div>
+                    </div>
                   </CardContent>
+                  <CardFooter>
+                    <Button>
+                      Change Password
+                    </Button>
+                  </CardFooter>
                 </Card>
               </TabsContent>
             </div>

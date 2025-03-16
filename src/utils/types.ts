@@ -15,6 +15,21 @@ export interface Assignment {
   points?: number;
 }
 
+export interface LiveClass {
+  id: string;
+  title: string;
+  description?: string;
+  scheduledStart: string;
+  scheduledEnd?: string;
+  actualStart?: string;
+  actualEnd?: string;
+  status: 'scheduled' | 'live' | 'completed' | 'cancelled';
+  classId: string;
+  createdBy: string;
+  meetingUrl?: string;
+  recordingUrl?: string;
+}
+
 export interface Classroom {
   id: string;
   name: string;
@@ -25,6 +40,7 @@ export interface Classroom {
   teacherName: string;
   coverImage?: string;
   enrollmentCode: string;
+  liveClasses?: LiveClass[];
 }
 
 export interface UserProfile {
@@ -34,6 +50,14 @@ export interface UserProfile {
   role: 'student' | 'teacher';
   avatar?: string;
   enrolledClasses: string[]; // Array of classroom IDs
+  preferences?: {
+    notifications?: {
+      email?: boolean;
+      browser?: boolean;
+    };
+    theme?: 'light' | 'dark' | 'system';
+    language?: string;
+  };
 }
 
 export interface AuthUser {

@@ -14,11 +14,21 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LiveClass } from '@/utils/types';
 import { formatDate } from '@/utils/assignmentUtils';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Account() {
-  const { profile, signOut } = useAuth();
+  const { profile, signOut, updateProfile } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("classes");
+  const { toast } = useToast();
+  
+  // Edit profile state
+  const [isEditing, setIsEditing] = useState(false);
+  const [name, setName] = useState(profile?.name || '');
+  const [username, setUsername] = useState(profile?.username || '');
+  const [isSaving, setIsSaving] = useState(false);
   
   const classrooms = getClassrooms().filter(classroom => {
     const user = getCurrentUser();
@@ -34,6 +44,36 @@ export default function Account() {
   const handleLogout = async () => {
     await signOut();
     navigate('/');
+  };
+
+  const handleSaveProfile = () => {
+    if (!profile) return;
+    
+    setIsSaving(true);
+    
+    try {
+      const updatedProfile = {
+        ...profile,
+        name,
+        username
+      };
+      
+      updateProfile(updatedProfile);
+      
+      toast({
+        title: 'Profile updated',
+        description: 'Your profile has been updated successfully.',
+      });
+      setIsEditing(false);
+    } catch (error: any) {
+      toast({
+        title: 'Update failed',
+        description: error.message || 'An error occurred',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (!profile) {
@@ -89,13 +129,70 @@ export default function Account() {
                     <AvatarImage src={profile.avatar} alt={profile.name} />
                     <AvatarFallback className="text-xl">{getInitials(profile.name)}</AvatarFallback>
                   </Avatar>
-                  <div className="text-center">
-                    <h2 className="text-xl font-semibold">{profile.name}</h2>
-                    <p className="text-sm text-muted-foreground">{profile.email}</p>
-                    <div className="mt-1 inline-block px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">
-                      {profile.role === 'teacher' ? 'Teacher' : 'Student'}
+                  
+                  {isEditing ? (
+                    <div className="w-full space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="edit-name">Display Name</Label>
+                        <Input 
+                          id="edit-name"
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          placeholder="Your full name"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="edit-username">Username</Label>
+                        <Input 
+                          id="edit-username"
+                          value={username}
+                          onChange={(e) => setUsername(e.target.value)}
+                          placeholder="Choose a username"
+                        />
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <Button 
+                          onClick={handleSaveProfile} 
+                          disabled={isSaving}
+                          className="flex-1"
+                        >
+                          {isSaving ? 'Saving...' : 'Save'}
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => {
+                            setName(profile.name);
+                            setUsername(profile.username || '');
+                            setIsEditing(false);
+                          }}
+                          className="flex-1"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="text-center">
+                      <h2 className="text-xl font-semibold">{profile.name}</h2>
+                      {profile.username && (
+                        <p className="text-sm text-muted-foreground mb-1">@{profile.username}</p>
+                      )}
+                      <p className="text-sm text-muted-foreground">{profile.email}</p>
+                      <div className="mt-1 inline-block px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">
+                        {profile.role === 'teacher' ? 'Teacher' : 'Student'}
+                      </div>
+                      <Button 
+                        variant="outline"
+                        size="sm"
+                        className="mt-3"
+                        onClick={() => setIsEditing(true)}
+                      >
+                        Edit Profile
+                      </Button>
+                    </div>
+                  )}
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4 mt-2">

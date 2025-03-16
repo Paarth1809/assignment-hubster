@@ -49,6 +49,7 @@ export interface UserProfile {
   email: string;
   role: 'student' | 'teacher';
   avatar?: string;
+  username?: string;
   enrolledClasses: string[]; // Array of classroom IDs
   preferences?: {
     notifications?: {

@@ -48,6 +48,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const storedProfile = getCurrentUser();
       if (storedProfile && storedProfile.id === user.id) {
         setProfile(storedProfile);
+        
+        // Apply saved theme preference if available
+        if (storedProfile.preferences?.theme) {
+          applyTheme(storedProfile.preferences.theme);
+        }
       } else {
         // Create a new profile based on auth data
         const newProfile: UserProfile = {
@@ -55,7 +60,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           name: user.user_metadata?.name || user.email.split('@')[0],
           email: user.email,
           role: 'student',
-          enrolledClasses: []
+          enrolledClasses: [],
+          preferences: {
+            theme: 'system',
+            language: 'en',
+            notifications: {
+              email: false,
+              browser: false
+            }
+          }
         };
         saveUserProfile(newProfile);
         setProfile(newProfile);
@@ -64,8 +77,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Initialize default user if not authenticated
       const defaultUser = initializeDefaultUser();
       setProfile(defaultUser);
+      
+      // Apply system theme preference
+      applyTheme('system');
     }
   }, [user]);
+
+  const applyTheme = (theme: 'light' | 'dark' | 'system') => {
+    if (theme === 'system') {
+      // Check system preference
+      const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.classList.toggle('dark', systemPrefersDark);
+      localStorage.removeItem('theme');
+    } else {
+      // Apply explicit theme preference
+      document.documentElement.classList.toggle('dark', theme === 'dark');
+      localStorage.setItem('theme', theme);
+    }
+  };
 
   const mapUser = (user: any): AuthUser => ({
     id: user.id,
@@ -96,7 +125,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           name,
           email,
           role,
-          enrolledClasses: []
+          enrolledClasses: [],
+          preferences: {
+            theme: 'system',
+            language: 'en',
+            notifications: {
+              email: false,
+              browser: false
+            }
+          }
         };
         saveUserProfile(newProfile);
       }
@@ -112,6 +149,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const updateProfile = (updatedProfile: UserProfile) => {
     saveUserProfile(updatedProfile);
     setProfile(updatedProfile);
+    
+    // Apply theme changes if they were updated
+    if (updatedProfile.preferences?.theme) {
+      applyTheme(updatedProfile.preferences.theme);
+    }
   };
 
   return (

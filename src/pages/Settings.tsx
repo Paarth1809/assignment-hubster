@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -14,7 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Shield, User, Bell, Palette, Languages } from 'lucide-react';
+import { Shield, User, Bell, Palette, Languages, Sun, Moon, Monitor } from 'lucide-react';
 import { UserProfile } from '@/utils/types';
 
 export default function Settings() {
@@ -27,6 +26,7 @@ export default function Settings() {
   const [name, setName] = useState(profile?.name || '');
   const [email, setEmail] = useState(profile?.email || '');
   const [role, setRole] = useState<'student' | 'teacher'>(profile?.role || 'student');
+  const [username, setUsername] = useState(profile?.username || '');
   const [isUpdating, setIsUpdating] = useState(false);
 
   // Notification preferences
@@ -44,12 +44,25 @@ export default function Settings() {
       setName(profile.name || '');
       setEmail(profile.email || '');
       setRole(profile.role || 'student');
+      setUsername(profile.username || '');
       setEmailNotifications(profile.preferences?.notifications?.email || false);
       setBrowserNotifications(profile.preferences?.notifications?.browser || false);
       setTheme(profile.preferences?.theme || 'system');
       setLanguage(profile.preferences?.language || 'en');
     }
   }, [profile]);
+
+  // Apply theme when it changes
+  useEffect(() => {
+    // If theme is system, check user's preference
+    if (theme === 'system') {
+      const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.classList.toggle('dark', systemPrefersDark);
+    } else {
+      // Otherwise apply the selected theme
+      document.documentElement.classList.toggle('dark', theme === 'dark');
+    }
+  }, [theme]);
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,7 +76,8 @@ export default function Settings() {
         ...profile,
         name,
         email,
-        role
+        role,
+        username
       };
       
       updateProfile(updatedProfile);
@@ -148,6 +162,13 @@ export default function Settings() {
       description: 'You have been logged out successfully.',
     });
     navigate('/');
+  };
+
+  const handlePasswordChange = () => {
+    toast({
+      title: 'Password update',
+      description: 'Password change functionality is simulated in this demo.',
+    });
   };
 
   if (!profile) {
@@ -249,6 +270,16 @@ export default function Settings() {
                         </div>
                         
                         <div className="space-y-2">
+                          <Label htmlFor="username">Username</Label>
+                          <Input 
+                            id="username"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            placeholder="Choose a username"
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
                           <Label htmlFor="email">Email</Label>
                           <Input 
                             id="email"
@@ -263,7 +294,7 @@ export default function Settings() {
                         </div>
                         
                         <div className="space-y-2">
-                          <Label>Role</Label>
+                          <Label>Account Type</Label>
                           <RadioGroup 
                             value={role} 
                             onValueChange={(value) => setRole(value as 'student' | 'teacher')}
@@ -349,24 +380,37 @@ export default function Settings() {
                     <div className="space-y-4">
                       <div className="space-y-2">
                         <Label>Theme</Label>
-                        <RadioGroup 
-                          value={theme} 
-                          onValueChange={(value) => setTheme(value as 'light' | 'dark' | 'system')}
-                          className="flex flex-col space-y-1"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="light" id="theme-light" />
-                            <Label htmlFor="theme-light">Light</Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="dark" id="theme-dark" />
-                            <Label htmlFor="theme-dark">Dark</Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="system" id="theme-system" />
-                            <Label htmlFor="theme-system">System Default</Label>
-                          </div>
-                        </RadioGroup>
+                        <div className="grid grid-cols-3 gap-4 pt-2">
+                          <Button 
+                            type="button" 
+                            variant={theme === 'light' ? 'default' : 'outline'} 
+                            className="flex flex-col items-center justify-center h-24 gap-2"
+                            onClick={() => setTheme('light')}
+                          >
+                            <Sun className="h-6 w-6" />
+                            <span>Light</span>
+                          </Button>
+                          
+                          <Button 
+                            type="button" 
+                            variant={theme === 'dark' ? 'default' : 'outline'} 
+                            className="flex flex-col items-center justify-center h-24 gap-2"
+                            onClick={() => setTheme('dark')}
+                          >
+                            <Moon className="h-6 w-6" />
+                            <span>Dark</span>
+                          </Button>
+                          
+                          <Button 
+                            type="button" 
+                            variant={theme === 'system' ? 'default' : 'outline'} 
+                            className="flex flex-col items-center justify-center h-24 gap-2"
+                            onClick={() => setTheme('system')}
+                          >
+                            <Monitor className="h-6 w-6" />
+                            <span>System</span>
+                          </Button>
+                        </div>
                       </div>
                       
                       <Separator />
@@ -438,7 +482,7 @@ export default function Settings() {
                     </div>
                   </CardContent>
                   <CardFooter>
-                    <Button>
+                    <Button onClick={handlePasswordChange}>
                       Change Password
                     </Button>
                   </CardFooter>

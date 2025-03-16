@@ -1,32 +1,33 @@
 
-import { Assignment } from '@/utils/types';
+import { Assignment } from "./types";
 
-export const formatDate = (dateString: string) => {
+// Format date function
+export const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
   return new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
   }).format(date);
 };
 
+// Format file size function
 export const formatFileSize = (bytes: number): string => {
   if (bytes < 1024) return bytes + ' bytes';
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 };
 
-export const getStatusColor = (status: Assignment['status']) => {
+// Get status color function
+export const getStatusColor = (status: Assignment['status']): string => {
   switch (status) {
-    case 'pending':
-      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
     case 'submitted':
-      return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
+      return 'text-blue-500 bg-blue-50 dark:bg-blue-900/20';
     case 'graded':
-      return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
+      return 'text-green-500 bg-green-50 dark:bg-green-900/20';
+    case 'pending':
+      return 'text-yellow-500 bg-yellow-50 dark:bg-yellow-900/20';
     default:
-      return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
+      return 'text-gray-500 bg-gray-50 dark:bg-gray-900/20';
   }
 };

@@ -13,9 +13,10 @@ import DeleteAssignmentDialog from './assignments/DeleteAssignmentDialog';
 interface AssignmentListProps {
   classId?: string;
   onAssignmentUpdate?: () => void;
+  isTeacher?: boolean;
 }
 
-const AssignmentList = ({ classId, onAssignmentUpdate }: AssignmentListProps) => {
+const AssignmentList = ({ classId, onAssignmentUpdate, isTeacher = false }: AssignmentListProps) => {
   const { toast } = useToast();
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -68,7 +69,7 @@ const AssignmentList = ({ classId, onAssignmentUpdate }: AssignmentListProps) =>
                 assignment={assignment}
                 getStatusColor={getStatusColor}
                 formatFileSize={formatFileSize}
-                onDelete={handleDeleteClick}
+                onDelete={isTeacher ? handleDeleteClick : undefined}
               />
             ))}
           </div>
@@ -79,7 +80,7 @@ const AssignmentList = ({ classId, onAssignmentUpdate }: AssignmentListProps) =>
               getStatusColor={getStatusColor}
               formatFileSize={formatFileSize}
               formatDate={formatDate}
-              onDelete={handleDeleteClick}
+              onDelete={isTeacher ? handleDeleteClick : undefined}
             />
           </div>
         </div>

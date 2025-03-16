@@ -35,3 +35,12 @@ export interface UserProfile {
   avatar?: string;
   enrolledClasses: string[]; // Array of classroom IDs
 }
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  user_metadata?: {
+    name?: string;
+    avatar_url?: string;
+  };
+}

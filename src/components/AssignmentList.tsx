@@ -26,7 +26,11 @@ const AssignmentList = ({ classId, onAssignmentUpdate, isTeacher = false }: Assi
   useEffect(() => {
     // Simulate loading delay
     const timer = setTimeout(() => {
-      setAssignments(classId ? getAssignments(classId) : getAssignments());
+      if (classId) {
+        setAssignments(getAssignmentsForClass(classId));
+      } else {
+        setAssignments(getAssignments());
+      }
       setIsLoading(false);
     }, 800);
 

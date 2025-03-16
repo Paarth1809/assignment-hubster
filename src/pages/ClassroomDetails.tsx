@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Navigate } from "react-router-dom";
 import { TabsContent } from "@/components/ui/tabs";
-import { getClassroomById, getAssignments } from "@/utils/storage";
+import { getClassroomById, getAssignmentsForClass } from "@/utils/storage";
 import { Assignment } from "@/utils/types";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -27,7 +27,7 @@ const ClassroomDetails = () => {
   useEffect(() => {
     if (id) {
       setClassroom(getClassroomById(id));
-      setAssignments(getAssignments(id));
+      setAssignments(getAssignmentsForClass(id));
     }
   }, [id]);
 

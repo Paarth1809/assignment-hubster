@@ -5,7 +5,7 @@ import { PlusCircle } from "lucide-react";
 import AssignmentList from "@/components/AssignmentList";
 import UploadForm from "@/components/UploadForm";
 import { useState } from "react";
-import { getAssignments } from "@/utils/storage";
+import { getAssignmentsForClass } from "@/utils/storage";
 import { Card } from "@/components/ui/card";
 
 interface ClassworkTabProps {
@@ -15,7 +15,7 @@ interface ClassworkTabProps {
 
 const ClassworkTab = ({ classId, isTeacher = false }: ClassworkTabProps) => {
   const [showUploadForm, setShowUploadForm] = useState(false);
-  const [assignments, setAssignments] = useState<Assignment[]>(getAssignments(classId));
+  const [assignments, setAssignments] = useState<Assignment[]>(getAssignmentsForClass(classId));
 
   return (
     <div className="space-y-6">
@@ -34,14 +34,14 @@ const ClassworkTab = ({ classId, isTeacher = false }: ClassworkTabProps) => {
           <h3 className="text-lg font-medium mb-4">Create New Assignment</h3>
           <UploadForm classId={classId} onSuccess={() => {
             setShowUploadForm(false);
-            setAssignments(getAssignments(classId));
+            setAssignments(getAssignmentsForClass(classId));
           }} />
         </Card>
       )}
       
       <AssignmentList 
         classId={classId} 
-        onAssignmentUpdate={() => setAssignments(getAssignments(classId))}
+        onAssignmentUpdate={() => setAssignments(getAssignmentsForClass(classId))}
         isTeacher={isTeacher}
       />
     </div>

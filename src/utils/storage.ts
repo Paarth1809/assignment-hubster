@@ -1,3 +1,4 @@
+
 import { Assignment, Classroom, UserProfile, LiveClass } from "./types";
 
 // Local Storage Helpers
@@ -38,6 +39,41 @@ export const createClassroom = (classroom: Classroom): Classroom => {
   classrooms.push(classroom);
   setLocalStorage(CLASSROOMS_STORAGE_KEY, classrooms);
   return classroom;
+};
+
+// Save a classroom from form data
+export const saveClassroom = (formData: any): Classroom => {
+  // Generate a random ID
+  const id = Math.random().toString(36).substring(2, 10);
+  // Generate a random enrollment code (6 characters, uppercase)
+  const enrollmentCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+  
+  const newClassroom: Classroom = {
+    id,
+    name: formData.name,
+    section: formData.section || undefined,
+    subject: formData.subject || undefined,
+    description: formData.description || undefined,
+    createdAt: new Date().toISOString(),
+    teacherName: formData.teacherName || "Teacher",
+    enrollmentCode,
+  };
+  
+  return createClassroom(newClassroom);
+};
+
+// Join a classroom
+export const joinClassroom = (code: string, userId: string): Classroom | null => {
+  const classrooms = getClassrooms();
+  const classroom = classrooms.find(c => c.enrollmentCode === code);
+  
+  if (classroom) {
+    // In a real app, we would add the user to the classroom here
+    // For now, we'll just return the classroom
+    return classroom;
+  }
+  
+  return null;
 };
 
 // Update a classroom
@@ -111,6 +147,28 @@ export const createAssignment = (assignment: Assignment): Assignment => {
   assignments.push(assignment);
   setLocalStorage(ASSIGNMENTS_STORAGE_KEY, assignments);
   return assignment;
+};
+
+// Save an assignment from form data
+export const saveAssignment = (assignmentData: any): Assignment => {
+  // Generate a random ID
+  const id = Math.random().toString(36).substring(2, 10);
+  
+  const newAssignment: Assignment = {
+    id,
+    title: assignmentData.title,
+    description: assignmentData.description,
+    fileName: assignmentData.fileName,
+    fileSize: assignmentData.fileSize,
+    fileType: assignmentData.fileType,
+    dateSubmitted: new Date().toISOString(),
+    status: 'pending',
+    classId: assignmentData.classId,
+    dueDate: assignmentData.dueDate,
+    points: assignmentData.points
+  };
+  
+  return createAssignment(newAssignment);
 };
 
 // Update an assignment

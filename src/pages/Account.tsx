@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import { Settings, LogOut, BookOpen, Layout, Bell, Calendar, UserCheck } from 'lucide-react';
+import { Settings, LogOut, BookOpen, Layout, Bell, Calendar, UserCheck, Clock } from 'lucide-react';
 import { getClassrooms, getCurrentUser, getLiveClasses } from '@/utils/storage';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';

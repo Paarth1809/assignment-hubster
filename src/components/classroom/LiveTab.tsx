@@ -35,6 +35,8 @@ const LiveTab = ({ classId, currentUser }: LiveTabProps) => {
   });
   const [selectedLiveClass, setSelectedLiveClass] = useState<LiveClass | null>(null);
   const [isJoining, setIsJoining] = useState(false);
+  const [isHosting, setIsHosting] = useState(false);
+  const [hostUrl, setHostUrl] = useState("");
 
   const isTeacher = currentUser.role === 'teacher';
 
@@ -80,6 +82,12 @@ const LiveTab = ({ classId, currentUser }: LiveTabProps) => {
   };
 
   const handleStartLiveClass = (liveClass: LiveClass) => {
+    // Generate a random meeting URL if one doesn't exist
+    if (!liveClass.meetingUrl) {
+      const roomId = Math.random().toString(36).substring(2, 12);
+      liveClass.meetingUrl = `https://meet.jit.si/${roomId}`;
+    }
+    
     const updatedLiveClass = {
       ...liveClass,
       status: "live" as const,
@@ -93,6 +101,11 @@ const LiveTab = ({ classId, currentUser }: LiveTabProps) => {
       title: "Live class started",
       description: "Students can now join your live class"
     });
+    
+    // Open the hosting dialog
+    setSelectedLiveClass(updatedLiveClass);
+    setHostUrl(updatedLiveClass.meetingUrl);
+    setIsHosting(true);
   };
 
   const handleEndLiveClass = (liveClass: LiveClass) => {
@@ -220,6 +233,9 @@ const LiveTab = ({ classId, currentUser }: LiveTabProps) => {
                     onChange={(e) => setNewLiveClass({...newLiveClass, meetingUrl: e.target.value})}
                     placeholder="https://meet.example.com/your-meeting-id"
                   />
+                  <p className="text-sm text-muted-foreground">
+                    Leave blank to auto-generate a meeting URL when you start the class
+                  </p>
                 </div>
               </div>
               <DialogFooter>
@@ -283,7 +299,7 @@ const LiveTab = ({ classId, currentUser }: LiveTabProps) => {
                         {liveClass.scheduledEnd && ` - ${new Date(liveClass.scheduledEnd).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
                       </span>
                     </div>
-                    {liveClass.meetingUrl && (
+                    {liveClass.meetingUrl && liveClass.status === 'live' && (
                       <div className="flex items-center">
                         <Link className="h-4 w-4 mr-2 text-muted-foreground" />
                         <a 
@@ -318,13 +334,25 @@ const LiveTab = ({ classId, currentUser }: LiveTabProps) => {
                         </>
                       )}
                       {liveClass.status === 'live' && (
-                        <Button 
-                          size="sm" 
-                          variant="destructive" 
-                          onClick={() => handleEndLiveClass(liveClass)}
-                        >
-                          End Class
-                        </Button>
+                        <>
+                          <Button 
+                            size="sm"
+                            onClick={() => {
+                              setSelectedLiveClass(liveClass);
+                              setHostUrl(liveClass.meetingUrl || '');
+                              setIsHosting(true);
+                            }}
+                          >
+                            Host Again
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="destructive" 
+                            onClick={() => handleEndLiveClass(liveClass)}
+                          >
+                            End Class
+                          </Button>
+                        </>
                       )}
                       {(liveClass.status === 'completed' || liveClass.status === 'cancelled') && (
                         <Button 
@@ -370,6 +398,7 @@ const LiveTab = ({ classId, currentUser }: LiveTabProps) => {
         </div>
       )}
 
+      {/* Dialog for students to join live class */}
       <Dialog open={isJoining} onOpenChange={setIsJoining}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -415,6 +444,90 @@ const LiveTab = ({ classId, currentUser }: LiveTabProps) => {
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsJoining(false)}>Close</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog for teachers to host live class */}
+      <Dialog open={isHosting} onOpenChange={setIsHosting}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Host Live Class</DialogTitle>
+            <DialogDescription>
+              You're about to host a live class session.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            {selectedLiveClass && (
+              <>
+                <div className="mb-4">
+                  <h3 className="font-medium">{selectedLiveClass.title}</h3>
+                  <p className="text-sm text-muted-foreground">{selectedLiveClass.description}</p>
+                </div>
+                <Separator className="my-4" />
+                <div className="mb-4">
+                  <Label htmlFor="hostUrl">Meeting URL</Label>
+                  <div className="flex items-center mt-1">
+                    <Input 
+                      id="hostUrl" 
+                      value={hostUrl}
+                      onChange={(e) => setHostUrl(e.target.value)}
+                      className="mr-2"
+                      readOnly
+                    />
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      onClick={() => {
+                        navigator.clipboard.writeText(hostUrl);
+                        toast({
+                          title: "Copied",
+                          description: "Meeting URL copied to clipboard",
+                        });
+                      }}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                    </Button>
+                  </div>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    Share this link with your students so they can join the live class.
+                  </p>
+                </div>
+
+                <div className="flex justify-between">
+                  <a 
+                    href={hostUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="flex-1 mr-2"
+                  >
+                    <Button className="w-full">
+                      Start Hosting
+                    </Button>
+                  </a>
+                  <Button 
+                    variant="outline" 
+                    className="flex-1 ml-2" 
+                    onClick={() => {
+                      // Update the meeting URL if changed
+                      if (selectedLiveClass.meetingUrl !== hostUrl) {
+                        const updatedLiveClass = {
+                          ...selectedLiveClass,
+                          meetingUrl: hostUrl
+                        };
+                        updateLiveClass(updatedLiveClass);
+                        setLiveClasses(getLiveClassesForClassroom(classId));
+                      }
+                      setIsHosting(false);
+                    }}
+                  >
+                    Close
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>

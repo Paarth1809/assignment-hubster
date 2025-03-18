@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, Navigate } from "react-router-dom";
 import { TabsContent } from "@/components/ui/tabs";
@@ -73,6 +74,7 @@ const ClassroomDetails = () => {
               <ClassworkTab 
                 classId={classroom.id} 
                 isTeacher={profile?.role === "teacher"}
+                viewMode="submissions"
               />
             </TabsContent>
 
@@ -86,6 +88,10 @@ const ClassroomDetails = () => {
 
             <TabsContent value="settings">
               <SettingsTab classroom={classroom} currentUser={profile} />
+            </TabsContent>
+
+            <TabsContent value="stream">
+              <StreamTab classroom={classroom} assignments={assignments} />
             </TabsContent>
           </div>
         </ClassTabs>

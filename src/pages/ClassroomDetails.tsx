@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, Navigate } from "react-router-dom";
 import { TabsContent } from "@/components/ui/tabs";
@@ -31,11 +30,37 @@ const ClassroomDetails = () => {
     }
   }, [id]);
 
-  // Updated access control logic
+  // Updated access control logic with proper null checking and debugging
   const hasAccess = () => {
-    if (!profile || !classroom) return false;
-    if (profile.role === 'teacher') return true;
-    return profile.enrolledClasses?.includes(classroom.id);
+    console.log('Checking access:', {
+      profile,
+      classroom,
+      enrolledClasses: profile?.enrolledClasses,
+      isTeacher: profile?.role === 'teacher'
+    });
+
+    if (!profile || !classroom) {
+      console.log('No profile or classroom found');
+      return false;
+    }
+
+    // Teachers have access to all classrooms
+    if (profile.role === 'teacher') {
+      console.log('User is a teacher, granting access');
+      return true;
+    }
+
+    // Check if student's enrolledClasses array exists and includes the classroom ID
+    const hasEnrollment = profile.enrolledClasses && Array.isArray(profile.enrolledClasses) && 
+                         profile.enrolledClasses.includes(classroom.id);
+    
+    console.log('Student enrollment check:', {
+      hasEnrollment,
+      classroomId: classroom.id,
+      enrolledClasses: profile.enrolledClasses
+    });
+
+    return hasEnrollment;
   };
 
   if (!profile) {

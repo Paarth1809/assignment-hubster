@@ -30,37 +30,9 @@ const ClassroomDetails = () => {
     }
   }, [id]);
 
-  // Updated access control logic with proper null checking and debugging
+  // Simplified access control - allow everyone
   const hasAccess = () => {
-    console.log('Checking access:', {
-      profile,
-      classroom,
-      enrolledClasses: profile?.enrolledClasses,
-      isTeacher: profile?.role === 'teacher'
-    });
-
-    if (!profile || !classroom) {
-      console.log('No profile or classroom found');
-      return false;
-    }
-
-    // Teachers have access to all classrooms
-    if (profile.role === 'teacher') {
-      console.log('User is a teacher, granting access');
-      return true;
-    }
-
-    // Check if student's enrolledClasses array exists and includes the classroom ID
-    const hasEnrollment = profile.enrolledClasses && Array.isArray(profile.enrolledClasses) && 
-                         profile.enrolledClasses.includes(classroom.id);
-    
-    console.log('Student enrollment check:', {
-      hasEnrollment,
-      classroomId: classroom.id,
-      enrolledClasses: profile.enrolledClasses
-    });
-
-    return hasEnrollment;
+    return true; // Allow access to everyone
   };
 
   if (!profile) {
@@ -69,23 +41,6 @@ const ClassroomDetails = () => {
 
   if (!classroom) {
     return <NotFoundContent />;
-  }
-
-  if (!hasAccess()) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <main className="pt-20 pb-20">
-          <div className="max-w-4xl mx-auto px-6 py-12 text-center">
-            <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-            <p className="text-muted-foreground mb-6">
-              You don't have access to this classroom. Please contact the teacher for an enrollment code.
-            </p>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
   }
 
   return (

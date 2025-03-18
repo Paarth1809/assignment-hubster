@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import ProfileTab from '@/components/settings/ProfileTab';
 import NotificationsTab from '@/components/settings/NotificationsTab';
 import AppearanceTab from '@/components/settings/AppearanceTab';
@@ -59,21 +59,23 @@ export default function Settings() {
             />
             
             <div className="flex-1">
-              <TabsContent value="profile" className="mt-0">
-                <ProfileTab profile={profile} updateProfile={updateProfile} />
-              </TabsContent>
-              
-              <TabsContent value="notifications" className="mt-0">
-                <NotificationsTab profile={profile} updateProfile={updateProfile} />
-              </TabsContent>
-              
-              <TabsContent value="appearance" className="mt-0">
-                <AppearanceTab profile={profile} updateProfile={updateProfile} />
-              </TabsContent>
-              
-              <TabsContent value="security" className="mt-0">
-                <SecurityTab />
-              </TabsContent>
+              <Tabs value={activeTab} className="w-full">
+                <TabsContent value="profile" className="mt-0">
+                  <ProfileTab profile={profile} updateProfile={updateProfile} />
+                </TabsContent>
+                
+                <TabsContent value="notifications" className="mt-0">
+                  <NotificationsTab profile={profile} updateProfile={updateProfile} />
+                </TabsContent>
+                
+                <TabsContent value="appearance" className="mt-0">
+                  <AppearanceTab profile={profile} updateProfile={updateProfile} />
+                </TabsContent>
+                
+                <TabsContent value="security" className="mt-0">
+                  <SecurityTab />
+                </TabsContent>
+              </Tabs>
             </div>
           </div>
         </div>

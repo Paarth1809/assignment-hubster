@@ -55,9 +55,12 @@ export interface UserProfile {
     notifications?: {
       email?: boolean;
       browser?: boolean;
+      emailUpdates?: boolean;
+      newAssignmentAlerts?: boolean;
     };
     theme?: 'light' | 'dark' | 'system';
     language?: string;
+    fontSize?: 'small' | 'medium' | 'large';
   };
 }
 

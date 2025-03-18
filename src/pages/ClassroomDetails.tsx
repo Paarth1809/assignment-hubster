@@ -74,7 +74,6 @@ const ClassroomDetails = () => {
               <ClassworkTab 
                 classId={classroom.id} 
                 isTeacher={profile?.role === "teacher"}
-                viewMode="submissions"
               />
             </TabsContent>
 

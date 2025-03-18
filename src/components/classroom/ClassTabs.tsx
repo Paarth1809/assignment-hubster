@@ -1,6 +1,6 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen, Users, FileText, MessageSquare, Settings, Video } from "lucide-react";
+import { BookOpen, Users, FileText, MessageSquare, Settings, Video, LayoutDashboard, Upload } from "lucide-react";
 
 interface ClassTabsProps {
   activeTab: string;
@@ -13,23 +13,27 @@ const ClassTabs = ({ activeTab, onTabChange, children }: ClassTabsProps) => {
     <div className="border-b sticky top-16 bg-background z-10">
       <div className="max-w-7xl mx-auto px-6">
         <Tabs 
-          defaultValue="stream" 
+          defaultValue="dashboard" 
           value={activeTab} 
           onValueChange={onTabChange} 
           className="w-full"
         >
-          <TabsList className="grid w-full max-w-3xl grid-cols-6">
-            <TabsTrigger value="stream" className="gap-2">
-              <MessageSquare className="h-4 w-4" />
-              <span className="hidden sm:inline">Stream</span>
+          <TabsList className="grid w-full max-w-4xl grid-cols-8">
+            <TabsTrigger value="dashboard" className="gap-2">
+              <LayoutDashboard className="h-4 w-4" />
+              <span className="hidden sm:inline">Dashboard</span>
             </TabsTrigger>
-            <TabsTrigger value="classwork" className="gap-2">
+            <TabsTrigger value="assignments" className="gap-2">
               <FileText className="h-4 w-4" />
-              <span className="hidden sm:inline">Classwork</span>
+              <span className="hidden sm:inline">Assignments</span>
             </TabsTrigger>
             <TabsTrigger value="live" className="gap-2">
               <Video className="h-4 w-4" />
               <span className="hidden sm:inline">Live</span>
+            </TabsTrigger>
+            <TabsTrigger value="submissions" className="gap-2">
+              <Upload className="h-4 w-4" />
+              <span className="hidden sm:inline">Submissions</span>
             </TabsTrigger>
             <TabsTrigger value="people" className="gap-2">
               <Users className="h-4 w-4" />
@@ -38,6 +42,10 @@ const ClassTabs = ({ activeTab, onTabChange, children }: ClassTabsProps) => {
             <TabsTrigger value="grades" className="gap-2">
               <BookOpen className="h-4 w-4" />
               <span className="hidden sm:inline">Grades</span>
+            </TabsTrigger>
+            <TabsTrigger value="stream" className="gap-2">
+              <MessageSquare className="h-4 w-4" />
+              <span className="hidden sm:inline">Stream</span>
             </TabsTrigger>
             <TabsTrigger value="settings" className="gap-2">
               <Settings className="h-4 w-4" />

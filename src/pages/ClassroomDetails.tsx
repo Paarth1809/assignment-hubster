@@ -19,7 +19,7 @@ import { useAuth } from "@/context/AuthContext";
 
 const ClassroomDetails = () => {
   const { id } = useParams<{ id: string }>();
-  const [activeTab, setActiveTab] = useState("stream");
+  const [activeTab, setActiveTab] = useState("dashboard");
   const [classroom, setClassroom] = useState(id ? getClassroomById(id) : undefined);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const { profile } = useAuth();
@@ -31,13 +31,11 @@ const ClassroomDetails = () => {
     }
   }, [id]);
 
-  // Check if user has access to this classroom
+  // Updated access control logic
   const hasAccess = () => {
-    if (!profile) return false;
+    if (!profile || !classroom) return false;
     if (profile.role === 'teacher') return true;
-    
-    // Check if student is enrolled in this class
-    return profile.enrolledClasses.includes(id || '');
+    return profile.enrolledClasses?.includes(classroom.id);
   };
 
   if (!profile) {
@@ -73,11 +71,11 @@ const ClassroomDetails = () => {
 
         <ClassTabs activeTab={activeTab} onTabChange={setActiveTab}>
           <div className="max-w-7xl mx-auto px-6 py-8">
-            <TabsContent value="stream">
+            <TabsContent value="dashboard">
               <StreamTab classroom={classroom} assignments={assignments} />
             </TabsContent>
 
-            <TabsContent value="classwork">
+            <TabsContent value="assignments">
               <ClassworkTab 
                 classId={classroom.id} 
                 isTeacher={profile?.role === "teacher"}
@@ -88,6 +86,13 @@ const ClassroomDetails = () => {
               <LiveTab 
                 classId={classroom.id}
                 currentUser={profile}
+              />
+            </TabsContent>
+
+            <TabsContent value="submissions">
+              <ClassworkTab 
+                classId={classroom.id} 
+                isTeacher={profile?.role === "teacher"}
               />
             </TabsContent>
 

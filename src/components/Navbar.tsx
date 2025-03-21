@@ -24,6 +24,7 @@ const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const { profile, signOut } = useAuth();
   const isMobile = useIsMobile();
+  const isTeacher = profile?.role === 'teacher';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -92,9 +93,11 @@ const Navbar = () => {
             <Link to="/join-class" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               Join Class
             </Link>
-            <Link to="/create-class" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-              Create Class
-            </Link>
+            {isTeacher && (
+              <Link to="/create-class" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                Create Class
+              </Link>
+            )}
           </nav>
         )}
 
@@ -184,12 +187,14 @@ const Navbar = () => {
                     >
                       Join Class
                     </Link>
-                    <Link 
-                      to="/create-class" 
-                      className="flex items-center gap-2 px-2 py-2 rounded-md hover:bg-secondary"
-                    >
-                      Create Class
-                    </Link>
+                    {isTeacher && (
+                      <Link 
+                        to="/create-class" 
+                        className="flex items-center gap-2 px-2 py-2 rounded-md hover:bg-secondary"
+                      >
+                        Create Class
+                      </Link>
+                    )}
                   </nav>
                   
                   <div className="mt-auto">

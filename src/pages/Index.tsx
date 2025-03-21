@@ -41,8 +41,10 @@ const Index = () => {
   }, []);
 
   const classrooms = getClassrooms();
-  const currentUser = getCurrentUser();
-
+  const userClassrooms = profile?.role === 'student' && profile.enrolledClasses?.length === 0
+    ? [] // If student with no enrolled classes, show empty
+    : classrooms;
+  
   const isTeacher = profile?.role === 'teacher';
 
   return (
@@ -75,7 +77,7 @@ const Index = () => {
               </div>
             </div>
             
-            {classrooms.length === 0 ? (
+            {userClassrooms.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
                 <BookOpenCheck size={64} className="text-muted-foreground mb-4" />
                 <h2 className="text-2xl font-medium mb-2">No classes yet</h2>
@@ -103,7 +105,7 @@ const Index = () => {
                 initial="hidden"
                 animate="visible"
               >
-                {classrooms.map((classroom) => (
+                {userClassrooms.map((classroom) => (
                   <motion.div key={classroom.id} variants={itemVariants}>
                     <ClassroomCard classroom={classroom} />
                   </motion.div>

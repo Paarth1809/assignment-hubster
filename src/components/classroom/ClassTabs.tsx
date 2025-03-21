@@ -5,7 +5,7 @@ import { BookOpen, Users, FileText, MessageSquare, Settings, Video, LayoutDashbo
 interface ClassTabsProps {
   activeTab: string;
   onTabChange: (value: string) => void;
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 const ClassTabs = ({ activeTab, onTabChange, children }: ClassTabsProps) => {

@@ -31,11 +31,6 @@ const ClassroomDetails = () => {
     }
   }, [id]);
 
-  // Simplified access control - allow everyone
-  const hasAccess = () => {
-    return true; // Allow access to everyone
-  };
-
   if (!profile) {
     return <Navigate to="/auth" />;
   }
@@ -90,10 +85,6 @@ const ClassroomDetails = () => {
 
                   <TabsContent value="settings">
                     <SettingsTab classroom={classroom} currentUser={profile} />
-                  </TabsContent>
-
-                  <TabsContent value="stream">
-                    <StreamTab classroom={classroom} assignments={assignments} />
                   </TabsContent>
                 </div>
               </ClassTabs>

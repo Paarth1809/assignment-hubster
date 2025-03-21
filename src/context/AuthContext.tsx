@@ -13,7 +13,7 @@ interface AuthContextProps {
   signIn: (email: string, password: string) => Promise<{error: any}>;
   signUp: (email: string, password: string, name: string, role: 'student' | 'teacher') => Promise<{error: any}>;
   signOut: () => Promise<void>;
-  updateProfile: (profile: UserProfile) => void;
+  updateProfile: (profile: Partial<UserProfile>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -146,14 +146,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut();
   };
 
-  const updateProfile = (updatedProfile: UserProfile) => {
-    saveUserProfile(updatedProfile);
-    setProfile(updatedProfile);
-    
-    // Apply theme changes if they were updated
-    if (updatedProfile.preferences?.theme) {
-      applyTheme(updatedProfile.preferences.theme);
-    }
+  const updateProfile = async (updatedProfileData: Partial<UserProfile>): Promise<void> => {
+    return new Promise<void>((resolve) => {
+      if (!profile) {
+        resolve();
+        return;
+      }
+      
+      // Merge the current profile with the updated data
+      const updatedProfile: UserProfile = {
+        ...profile,
+        ...updatedProfileData,
+        // For nested objects, we need to merge them explicitly
+        preferences: {
+          ...profile.preferences,
+          ...updatedProfileData.preferences,
+          notifications: {
+            ...profile.preferences?.notifications,
+            ...updatedProfileData.preferences?.notifications
+          }
+        }
+      };
+      
+      saveUserProfile(updatedProfile);
+      setProfile(updatedProfile);
+      
+      // Apply theme changes if they were updated
+      if (updatedProfileData.preferences?.theme) {
+        applyTheme(updatedProfileData.preferences.theme);
+      }
+      
+      resolve();
+    });
   };
 
   return (

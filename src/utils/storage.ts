@@ -1,4 +1,3 @@
-
 import { Assignment, Classroom, UserProfile, LiveClass } from "./types";
 
 // Local Storage Helpers
@@ -60,6 +59,17 @@ export const saveClassroom = (formData: any): Classroom => {
   };
   
   return createClassroom(newClassroom);
+};
+
+// Get classrooms for the current user based on their enrolledClasses
+export const getUserClassrooms = (): Classroom[] => {
+  const user = getCurrentUser();
+  if (!user || !user.enrolledClasses || user.enrolledClasses.length === 0) {
+    return [];
+  }
+  
+  const allClassrooms = getClassrooms();
+  return allClassrooms.filter(classroom => user.enrolledClasses.includes(classroom.id));
 };
 
 // Join a classroom

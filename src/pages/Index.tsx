@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { PlusIcon, BookOpenCheck } from "lucide-react";
 import { motion } from "framer-motion";
-import { getClassrooms, getCurrentUser } from "@/utils/storage";
+import { getClassrooms, getUserClassrooms } from "@/utils/storage";
 import ClassroomCard from "@/components/ClassroomCard";
 import { containerVariants, itemVariants } from "@/utils/animations";
 import Navbar from "@/components/Navbar";
@@ -40,10 +40,13 @@ const Index = () => {
     };
   }, []);
 
-  const classrooms = getClassrooms();
-  const userClassrooms = profile?.role === 'student' && profile.enrolledClasses?.length === 0
-    ? [] // If student with no enrolled classes, show empty
-    : classrooms;
+  // Get all classrooms or only joined classrooms based on role
+  const allClassrooms = getClassrooms();
+  const userClassrooms = profile?.role === 'student' 
+    ? (profile.enrolledClasses?.length ? 
+        allClassrooms.filter(c => profile.enrolledClasses.includes(c.id)) : 
+        [])
+    : allClassrooms; // Teachers see all classrooms
   
   const isTeacher = profile?.role === 'teacher';
 

@@ -1,246 +1,261 @@
 
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
-import { UserProfile } from '@/utils/types';
+import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { Bell, Mail, Browser, Clock, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { UserProfile } from '@/utils/types';
+import { Bell, Globe, Mail, MessageSquare } from 'lucide-react';
 
 interface NotificationsTabProps {
   profile: UserProfile;
-  updateProfile: (profile: UserProfile) => void;
+  updateProfile: (profile: Partial<UserProfile>) => Promise<void>;
 }
 
 export default function NotificationsTab({ profile, updateProfile }: NotificationsTabProps) {
   const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   
-  // Notification settings with defaults
+  // Initialize notification preferences
   const [emailNotifications, setEmailNotifications] = useState(
-    profile?.preferences?.notifications?.email || false
+    profile.preferences?.notifications?.email ?? true
   );
   const [browserNotifications, setBrowserNotifications] = useState(
-    profile?.preferences?.notifications?.browser || false
+    profile.preferences?.notifications?.browser ?? true
   );
   const [emailUpdates, setEmailUpdates] = useState(
-    profile?.preferences?.notifications?.emailUpdates || false
+    profile.preferences?.notifications?.emailUpdates ?? true
   );
-  const [newAssignmentAlerts, setNewAssignmentAlerts] = useState(
-    profile?.preferences?.notifications?.newAssignmentAlerts || true
+  const [assignmentAlerts, setAssignmentAlerts] = useState(
+    profile.preferences?.notifications?.newAssignmentAlerts ?? true
   );
-
-  const handleUpdateNotifications = () => {
-    setIsSubmitting(true);
+  
+  // Browser notification permission state
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | null>(
+    typeof Notification !== 'undefined' ? Notification.permission : null
+  );
+  
+  // Request permission for browser notifications
+  const requestNotificationPermission = async () => {
+    if (typeof Notification === 'undefined') {
+      toast({
+        title: 'Notifications not supported',
+        description: 'Your browser does not support notifications.',
+        variant: 'destructive',
+      });
+      return;
+    }
     
     try {
-      const updatedProfile: UserProfile = {
-        ...profile,
+      const permission = await Notification.requestPermission();
+      setNotificationPermission(permission);
+      
+      if (permission === 'granted') {
+        toast({
+          title: 'Notifications enabled',
+          description: 'You will now receive browser notifications.',
+        });
+        
+        // Send a test notification
+        new Notification('AssignHub Notifications', {
+          body: 'You have successfully enabled notifications!',
+          icon: '/favicon.ico',
+        });
+      } else if (permission === 'denied') {
+        toast({
+          title: 'Notifications blocked',
+          description: 'Please enable notifications in your browser settings.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Error requesting notification permission:', error);
+      toast({
+        title: 'Error enabling notifications',
+        description: 'There was a problem enabling notifications.',
+        variant: 'destructive',
+      });
+    }
+  };
+  
+  const saveNotificationSettings = async () => {
+    setIsSaving(true);
+    
+    try {
+      await updateProfile({
         preferences: {
           ...profile.preferences,
           notifications: {
             email: emailNotifications,
             browser: browserNotifications,
             emailUpdates: emailUpdates,
-            newAssignmentAlerts: newAssignmentAlerts
+            newAssignmentAlerts: assignmentAlerts,
           }
         }
-      };
-      
-      updateProfile(updatedProfile);
-      
-      toast({
-        title: "Notification settings updated",
-        description: "Your notification preferences have been saved successfully."
       });
-    } catch (error: any) {
-      console.error("Failed to update notifications:", error);
+      
       toast({
-        title: "Update failed",
-        description: "There was an error updating your notification settings.",
-        variant: "destructive"
+        title: 'Notification settings saved',
+        description: 'Your notification preferences have been updated.',
+      });
+    } catch (error) {
+      console.error('Error saving notification settings:', error);
+      toast({
+        title: 'Error saving settings',
+        description: 'There was a problem saving your notification settings.',
+        variant: 'destructive',
       });
     } finally {
-      setIsSubmitting(false);
+      setIsSaving(false);
     }
   };
-
-  // Request browser notification permission
-  const requestBrowserPermission = async () => {
-    if (!("Notification" in window)) {
-      toast({
-        title: "Notifications not supported",
-        description: "This browser does not support desktop notifications",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    if (Notification.permission === "granted") {
-      setBrowserNotifications(true);
-      return;
-    }
-    
-    if (Notification.permission !== "denied") {
-      const permission = await Notification.requestPermission();
-      if (permission === "granted") {
-        setBrowserNotifications(true);
-        toast({
-          title: "Notifications enabled",
-          description: "You will now receive browser notifications"
-        });
-      } else {
-        toast({
-          title: "Permission denied",
-          description: "You need to allow notifications in your browser settings",
-          variant: "destructive"
-        });
-      }
-    } else {
-      toast({
-        title: "Permission denied",
-        description: "You need to allow notifications in your browser settings",
-        variant: "destructive"
-      });
-    }
+  
+  // Helper for determining if notification permissions can be requested
+  const canRequestNotifications = () => {
+    return typeof Notification !== 'undefined' && notificationPermission !== 'granted';
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Bell className="h-5 w-5" />
-          Notification Settings
-        </CardTitle>
-        <CardDescription>
-          Manage how you receive notifications about classroom activity
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-6">
-          <div>
-            <h3 className="text-lg font-medium">Notification Channels</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Choose how you want to be notified about classroom activities
-            </p>
-            
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label className="flex items-center gap-2">
-                    <Mail className="h-4 w-4" />
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-medium">Notification Settings</h3>
+        <p className="text-sm text-muted-foreground">
+          Configure how you want to receive notifications from the platform
+        </p>
+      </div>
+      
+      <Separator />
+      
+      <div className="grid gap-6">
+        {/* Notification Channels */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Notification Channels</CardTitle>
+            <CardDescription>
+              Choose how you want to be notified
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between space-x-2">
+              <div className="flex items-center space-x-4">
+                <div className="p-2 bg-primary/10 rounded-full">
+                  <Mail className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <Label htmlFor="email-notifications" className="font-medium">
                     Email Notifications
                   </Label>
                   <p className="text-sm text-muted-foreground">
-                    Receive notifications about classroom activity via email
+                    Receive email notifications for important updates
                   </p>
                 </div>
-                <Switch 
-                  checked={emailNotifications}
-                  onCheckedChange={setEmailNotifications}
-                />
               </div>
-              
-              <Separator />
-              
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label className="flex items-center gap-2">
-                    <Browser className="h-4 w-4" />
+              <Switch
+                id="email-notifications"
+                checked={emailNotifications}
+                onCheckedChange={setEmailNotifications}
+              />
+            </div>
+            
+            <div className="flex items-center justify-between space-x-2">
+              <div className="flex items-center space-x-4">
+                <div className="p-2 bg-primary/10 rounded-full">
+                  <Globe className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <Label htmlFor="browser-notifications" className="font-medium">
                     Browser Notifications
                   </Label>
                   <p className="text-sm text-muted-foreground">
-                    Allow push notifications in your browser
+                    Get real-time notifications in your browser
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Switch 
-                    checked={browserNotifications}
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        requestBrowserPermission();
-                      } else {
-                        setBrowserNotifications(false);
-                      }
-                    }}
-                  />
-                  {browserNotifications && (
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => {
-                        // Test notification
-                        new Notification("Test Notification", {
-                          body: "This is a test notification from the learning platform"
-                        });
-                      }}
-                    >
-                      Test
-                    </Button>
-                  )}
-                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                {canRequestNotifications() && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={requestNotificationPermission}
+                  >
+                    Enable
+                  </Button>
+                )}
+                <Switch
+                  id="browser-notifications"
+                  checked={browserNotifications}
+                  onCheckedChange={setBrowserNotifications}
+                  disabled={notificationPermission !== 'granted'}
+                />
               </div>
             </div>
-          </div>
-          
-          <Separator />
-          
-          <div>
-            <h3 className="text-lg font-medium">Notification Types</h3>
-            <p className="text-sm text-muted-foreground mb-4">
+          </CardContent>
+        </Card>
+        
+        {/* Notification Types */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Notification Types</CardTitle>
+            <CardDescription>
               Select which types of notifications you want to receive
-            </p>
-            
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label className="flex items-center gap-2">
-                    <Clock className="h-4 w-4" />
-                    Weekly Email Updates
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between space-x-2">
+              <div className="flex items-center space-x-4">
+                <div className="p-2 bg-primary/10 rounded-full">
+                  <MessageSquare className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <Label htmlFor="email-updates" className="font-medium">
+                    Weekly Updates and Newsletters
                   </Label>
                   <p className="text-sm text-muted-foreground">
-                    Receive a weekly summary of your classroom activity
+                    Get weekly summaries and educational tips
                   </p>
                 </div>
-                <Switch 
-                  checked={emailUpdates}
-                  onCheckedChange={setEmailUpdates}
-                  disabled={!emailNotifications}
-                />
               </div>
-              
-              <Separator />
-              
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>New Assignment Alerts</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Get notified when a new assignment is posted
-                  </p>
-                </div>
-                <Switch 
-                  checked={newAssignmentAlerts}
-                  onCheckedChange={setNewAssignmentAlerts}
-                />
-              </div>
+              <Switch
+                id="email-updates"
+                checked={emailUpdates}
+                onCheckedChange={setEmailUpdates}
+              />
             </div>
-          </div>
-        </div>
-      </CardContent>
-      <CardFooter>
-        <Button onClick={handleUpdateNotifications} disabled={isSubmitting}>
-          {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Saving...
-            </>
-          ) : (
-            'Save Notification Settings'
-          )}
+            
+            <div className="flex items-center justify-between space-x-2">
+              <div className="flex items-center space-x-4">
+                <div className="p-2 bg-primary/10 rounded-full">
+                  <Bell className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <Label htmlFor="assignment-alerts" className="font-medium">
+                    New Assignment Alerts
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Be notified when teachers post new assignments
+                  </p>
+                </div>
+              </div>
+              <Switch
+                id="assignment-alerts"
+                checked={assignmentAlerts}
+                onCheckedChange={setAssignmentAlerts}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+      
+      <div className="flex justify-end">
+        <Button 
+          onClick={saveNotificationSettings} 
+          disabled={isSaving}
+        >
+          {isSaving ? 'Saving...' : 'Save Settings'}
         </Button>
-      </CardFooter>
-    </Card>
+      </div>
+    </div>
   );
 }

@@ -7,6 +7,7 @@ import UploadForm from "@/components/UploadForm";
 import { useState } from "react";
 import { getAssignmentsForClass } from "@/utils/storage";
 import { Card } from "@/components/ui/card";
+import { useAuth } from "@/context/AuthContext";
 
 interface ClassworkTabProps {
   classId: string;
@@ -16,6 +17,7 @@ interface ClassworkTabProps {
 const ClassworkTab = ({ classId, isTeacher = false }: ClassworkTabProps) => {
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [assignments, setAssignments] = useState<Assignment[]>(getAssignmentsForClass(classId));
+  const { profile } = useAuth();
 
   return (
     <div className="space-y-6">

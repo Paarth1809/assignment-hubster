@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useParams, Navigate, Link } from "react-router-dom";
+import { useParams, Navigate, Link, useLocation, useNavigate } from "react-router-dom";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { getClassroomById, getAssignmentsForClass } from "@/utils/storage";
 import { Assignment } from "@/utils/types";
@@ -19,10 +19,19 @@ import { useAuth } from "@/context/AuthContext";
 
 const ClassroomDetails = () => {
   const { id } = useParams<{ id: string }>();
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { profile } = useAuth();
+  
+  // Parse URL params
+  const searchParams = new URLSearchParams(location.search);
+  const tabParam = searchParams.get('tab');
+  const showCreateForm = searchParams.get('create') === 'true';
+  
+  // Set active tab from URL params or default to dashboard
+  const [activeTab, setActiveTab] = useState(tabParam || "dashboard");
   const [classroom, setClassroom] = useState(id ? getClassroomById(id) : undefined);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const { profile } = useAuth();
 
   useEffect(() => {
     if (id) {
@@ -30,6 +39,20 @@ const ClassroomDetails = () => {
       setAssignments(getAssignmentsForClass(id));
     }
   }, [id]);
+  
+  // Update URL when tab changes
+  useEffect(() => {
+    if (tabParam !== activeTab) {
+      navigate(`/classroom/${id}?tab=${activeTab}${showCreateForm ? '&create=true' : ''}`, { replace: true });
+    }
+  }, [activeTab, id, showCreateForm, tabParam, navigate]);
+  
+  // Update active tab when URL param changes
+  useEffect(() => {
+    if (tabParam && tabParam !== activeTab) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
 
   if (!profile) {
     return <Navigate to="/auth" />;
@@ -39,14 +62,20 @@ const ClassroomDetails = () => {
     return <NotFoundContent />;
   }
 
+  const handleTabChange = (value: string) => {
+    // If changing tabs, remove the create parameter from URL
+    setActiveTab(value);
+    navigate(`/classroom/${id}?tab=${value}`, { replace: true });
+  };
+
   return (
     <div className="min-h-screen bg-[#121212] text-white">
       <Navbar />
       <main className="pt-16">
-        <ClassHeader classroom={classroom} />
+        <ClassHeader classroom={classroom} activeTab={activeTab} />
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <ClassTabs activeTab={activeTab} onTabChange={setActiveTab}>
+        <Tabs value={activeTab} onValueChange={handleTabChange}>
+          <ClassTabs activeTab={activeTab} onTabChange={handleTabChange}>
             <div className="max-w-7xl mx-auto px-6 py-8">
               <TabsContent value="dashboard">
                 <StreamTab classroom={classroom} assignments={assignments} />
@@ -56,6 +85,7 @@ const ClassroomDetails = () => {
                 <ClassworkTab 
                   classId={classroom.id} 
                   isTeacher={profile?.role === "teacher"}
+                  showCreateForm={showCreateForm && activeTab === "assignments"}
                 />
               </TabsContent>
 
@@ -63,6 +93,7 @@ const ClassroomDetails = () => {
                 <LiveTab 
                   classId={classroom.id}
                   currentUser={profile}
+                  showCreateForm={showCreateForm && activeTab === "live"}
                 />
               </TabsContent>
 
@@ -70,6 +101,8 @@ const ClassroomDetails = () => {
                 <ClassworkTab 
                   classId={classroom.id} 
                   isTeacher={profile?.role === "teacher"}
+                  showCreateForm={showCreateForm && activeTab === "submissions"}
+                  isSubmissions
                 />
               </TabsContent>
 

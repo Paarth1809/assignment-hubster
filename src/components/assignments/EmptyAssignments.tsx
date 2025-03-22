@@ -1,7 +1,19 @@
 
 import React from 'react';
+import { Button } from "@/components/ui/button";
+import { FileText, Video, Upload, Plus } from 'lucide-react';
+import { useAuth } from "@/context/AuthContext";
+import { Link } from 'react-router-dom';
 
-const EmptyAssignments = () => {
+interface EmptyAssignmentsProps {
+  classId?: string;
+  showCreateOptions?: boolean;
+}
+
+const EmptyAssignments = ({ classId, showCreateOptions = false }: EmptyAssignmentsProps) => {
+  const { profile } = useAuth();
+  const isTeacher = profile?.role === 'teacher';
+
   return (
     <div className="text-center py-12 bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl">
       <svg 
@@ -26,6 +38,38 @@ const EmptyAssignments = () => {
       <p className="text-gray-400 mt-1 mb-6 max-w-md mx-auto">
         There are no assignments in this class yet. Create your first assignment to get started.
       </p>
+      
+      {(showCreateOptions && isTeacher && classId) && (
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Button 
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+            asChild
+          >
+            <Link to={`/classroom/${classId}?tab=assignments&create=true`}>
+              <FileText className="h-4 w-4" />
+              Create Assignment
+            </Link>
+          </Button>
+          <Button 
+            className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+            asChild
+          >
+            <Link to={`/classroom/${classId}?tab=live&create=true`}>
+              <Video className="h-4 w-4" />
+              Schedule Live Class
+            </Link>
+          </Button>
+          <Button 
+            className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700"
+            asChild
+          >
+            <Link to={`/classroom/${classId}?tab=submissions&create=true`}>
+              <Upload className="h-4 w-4" />
+              Request Submission
+            </Link>
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

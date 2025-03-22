@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
@@ -175,15 +174,15 @@ export default function ContentTabs({ classrooms, upcomingLiveClasses }: Content
           <Button 
             variant="outline" 
             className="w-full"
-            onClick={() => navigate('/join-class')}
+            onClick={() => navigate('/classes')}
           >
-            Join Class
+            View All Classes
           </Button>
           <Button 
             className="w-full"
-            onClick={() => navigate('/create-class')}
+            onClick={() => navigate('/join-class')}
           >
-            Create Class
+            Join Class
           </Button>
         </div>
       </CardFooter>

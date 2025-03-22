@@ -39,6 +39,12 @@ const MobileMenu = ({ profile, isTeacher, signOut }: MobileMenuProps) => {
               Home
             </Link>
             <Link 
+              to="/classes" 
+              className="flex items-center gap-2 px-2 py-2 rounded-md hover:bg-secondary"
+            >
+              Classes
+            </Link>
+            <Link 
               to="/join-class" 
               className="flex items-center gap-2 px-2 py-2 rounded-md hover:bg-secondary"
             >

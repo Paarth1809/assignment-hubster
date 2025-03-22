@@ -11,9 +11,6 @@ const DesktopNav = ({ isTeacher }: DesktopNavProps) => {
       <Link to="/" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
         Home
       </Link>
-      <Link to="/classes" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-        Classes
-      </Link>
       <Link to="/join-class" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
         Join Class
       </Link>

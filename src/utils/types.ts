@@ -1,3 +1,4 @@
+
 export interface Assignment {
   id: string;
   title: string;
@@ -12,7 +13,6 @@ export interface Assignment {
   classId: string;
   dueDate?: string;
   points?: number;
-  locked?: boolean;
 }
 
 export interface LiveClass {

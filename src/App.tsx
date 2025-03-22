@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { useAuth } from './context/AuthContext';
 import Index from './pages/Index';
@@ -8,11 +9,11 @@ import Account from './pages/Account';
 import Settings from './pages/Settings';
 import JoinClass from './pages/JoinClass';
 import CreateClass from './pages/CreateClass';
-import Classroom from './pages/Classroom';
+import ClassroomDetails from './pages/ClassroomDetails';
 import Classes from './pages/Classes';
 
 function App() {
-  const { loading } = useAuth();
+  const { user, profile } = useAuth();
   const [showToaster, setShowToaster] = useState(true);
 
   useEffect(() => {
@@ -24,6 +25,9 @@ function App() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Show loading state while auth is being determined
+  const loading = user === undefined && profile === undefined;
+  
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -43,7 +47,7 @@ function App() {
         <Route path="/settings" element={<Settings />} />
         <Route path="/join-class" element={<JoinClass />} />
         <Route path="/create-class" element={<CreateClass />} />
-        <Route path="/classroom/:classId" element={<Classroom />} />
+        <Route path="/classroom/:classId" element={<ClassroomDetails />} />
       </Routes>
     </BrowserRouter>
   );

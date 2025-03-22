@@ -10,6 +10,8 @@ import {
   TableRow,
   TableCell 
 } from "@/components/ui/table";
+import { Lock, Unlock } from "lucide-react";
+import { isAssignmentPastDue } from '@/utils/storage';
 
 interface AssignmentTableProps {
   assignments: Assignment[];
@@ -17,6 +19,8 @@ interface AssignmentTableProps {
   formatFileSize: (bytes: number) => string;
   formatDate: (dateString: string) => string;
   onDelete: (id: string) => void;
+  onLockToggle?: (id: string, lock: boolean) => void;
+  isTeacher?: boolean;
 }
 
 const AssignmentTable = ({ 
@@ -24,7 +28,9 @@ const AssignmentTable = ({
   getStatusColor, 
   formatFileSize, 
   formatDate, 
-  onDelete 
+  onDelete,
+  onLockToggle,
+  isTeacher = false
 }: AssignmentTableProps) => {
   return (
     <Table>
@@ -45,64 +51,106 @@ const AssignmentTable = ({
         </TableRow>
       </TableHeader>
       <TableBody className="divide-y divide-border">
-        {assignments.map((assignment) => (
-          <TableRow key={assignment.id} className="hover:bg-muted/20 transition-colors">
-            <TableCell className="px-6 py-4 whitespace-nowrap">
-              <div className="flex items-start">
-                <div className="flex-shrink-0 h-10 w-10 rounded-md bg-primary/10 flex items-center justify-center">
-                  <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    width="20" 
-                    height="20" 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    strokeWidth="2" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    className="text-primary"
-                  >
-                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-                    <polyline points="14 2 14 8 20 8" />
-                  </svg>
-                </div>
-                <div className="ml-4">
-                  <h4 className="text-sm font-medium">{assignment.title}</h4>
-                  <div className="flex space-x-2 items-center mt-1">
-                    <span className="text-xs text-muted-foreground truncate max-w-[180px]">
-                      {assignment.fileName}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {formatFileSize(assignment.fileSize)}
-                    </span>
+        {assignments.map((assignment) => {
+          const isPastDue = isAssignmentPastDue(assignment);
+          return (
+            <TableRow key={assignment.id} className="hover:bg-muted/20 transition-colors">
+              <TableCell className="px-6 py-4 whitespace-nowrap">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0 h-10 w-10 rounded-md bg-primary/10 flex items-center justify-center">
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      width="20" 
+                      height="20" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="2" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      className="text-primary"
+                    >
+                      <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                      <polyline points="14 2 14 8 20 8" />
+                    </svg>
+                  </div>
+                  <div className="ml-4">
+                    <h4 className="text-sm font-medium flex items-center gap-2">
+                      {assignment.title}
+                      {assignment.locked && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">
+                          <Lock className="w-3 h-3 mr-1" />
+                          Locked
+                        </span>
+                      )}
+                      {isPastDue && !assignment.locked && isTeacher && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
+                          Past due
+                        </span>
+                      )}
+                    </h4>
+                    <div className="flex space-x-2 items-center mt-1">
+                      <span className="text-xs text-muted-foreground truncate max-w-[180px]">
+                        {assignment.fileName}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {formatFileSize(assignment.fileSize)}
+                      </span>
+                    </div>
+                    {assignment.dueDate && (
+                      <div className="mt-1">
+                        <span className="text-xs text-muted-foreground">
+                          Due: {formatDate(assignment.dueDate)}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
-              </div>
-            </TableCell>
-            <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-              {formatDate(assignment.dateSubmitted)}
-            </TableCell>
-            <TableCell className="px-6 py-4 whitespace-nowrap">
-              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(assignment.status)}`}>
-                {assignment.status.charAt(0).toUpperCase() + assignment.status.slice(1)}
-              </span>
-            </TableCell>
-            <TableCell className="px-6 py-4 whitespace-nowrap text-sm">
-              <div className="flex space-x-2">
-                <Button variant="ghost" className="h-8 px-2 text-primary">
-                  Download
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  className="h-8 px-2 text-destructive"
-                  onClick={() => onDelete(assignment.id)}
-                >
-                  Delete
-                </Button>
-              </div>
-            </TableCell>
-          </TableRow>
-        ))}
+              </TableCell>
+              <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                {formatDate(assignment.dateSubmitted)}
+              </TableCell>
+              <TableCell className="px-6 py-4 whitespace-nowrap">
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(assignment.status)}`}>
+                  {assignment.status.charAt(0).toUpperCase() + assignment.status.slice(1)}
+                </span>
+              </TableCell>
+              <TableCell className="px-6 py-4 whitespace-nowrap text-sm">
+                <div className="flex space-x-2">
+                  <Button variant="ghost" className="h-8 px-2 text-primary" disabled={assignment.locked}>
+                    Download
+                  </Button>
+                  {isTeacher && onLockToggle && (
+                    <Button 
+                      variant="ghost" 
+                      className="h-8 px-2 text-primary"
+                      onClick={() => onLockToggle(assignment.id, !assignment.locked)}
+                    >
+                      {assignment.locked ? (
+                        <>
+                          <Unlock className="h-4 w-4 mr-1" />
+                          Unlock
+                        </>
+                      ) : (
+                        <>
+                          <Lock className="h-4 w-4 mr-1" />
+                          Lock
+                        </>
+                      )}
+                    </Button>
+                  )}
+                  <Button 
+                    variant="ghost" 
+                    className="h-8 px-2 text-destructive"
+                    onClick={() => onDelete(assignment.id)}
+                  >
+                    Delete
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          );
+        })}
       </TableBody>
     </Table>
   );

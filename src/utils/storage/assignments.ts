@@ -48,7 +48,8 @@ export const saveAssignment = (assignmentData: any): Assignment => {
     status: 'pending',
     classId: assignmentData.classId,
     dueDate: assignmentData.dueDate,
-    points: assignmentData.points
+    points: assignmentData.points,
+    locked: false
   };
   
   return createAssignment(newAssignment);
@@ -63,6 +64,40 @@ export const updateAssignment = (updatedAssignment: Assignment): Assignment => {
     setLocalStorage(ASSIGNMENTS_STORAGE_KEY, assignments);
   }
   return updatedAssignment;
+};
+
+// Lock an assignment
+export const lockAssignment = (assignmentId: string): Assignment | null => {
+  const assignments = getAssignments();
+  const index = assignments.findIndex(a => a.id === assignmentId);
+  if (index !== -1) {
+    assignments[index].locked = true;
+    setLocalStorage(ASSIGNMENTS_STORAGE_KEY, assignments);
+    return assignments[index];
+  }
+  return null;
+};
+
+// Unlock an assignment
+export const unlockAssignment = (assignmentId: string): Assignment | null => {
+  const assignments = getAssignments();
+  const index = assignments.findIndex(a => a.id === assignmentId);
+  if (index !== -1) {
+    assignments[index].locked = false;
+    setLocalStorage(ASSIGNMENTS_STORAGE_KEY, assignments);
+    return assignments[index];
+  }
+  return null;
+};
+
+// Check if an assignment is past due date
+export const isAssignmentPastDue = (assignment: Assignment): boolean => {
+  if (!assignment.dueDate) return false;
+  
+  const dueDate = new Date(assignment.dueDate);
+  const currentDate = new Date();
+  
+  return currentDate > dueDate;
 };
 
 // Delete an assignment

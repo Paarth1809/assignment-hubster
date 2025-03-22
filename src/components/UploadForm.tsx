@@ -1,11 +1,13 @@
 
-import { useState, useRef, DragEvent, ChangeEvent } from 'react';
+import { useState, useRef, DragEvent, ChangeEvent, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
-import { saveAssignment } from '@/utils/storage';
+import { saveAssignment, getAssignmentsForClass, isAssignmentPastDue } from '@/utils/storage';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Assignment } from '@/utils/types';
 
 interface FileDetails {
   name: string;
@@ -28,6 +30,7 @@ const UploadForm = ({ classId, onSuccess }: UploadFormProps) => {
   const [dueDate, setDueDate] = useState('');
   const [points, setPoints] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [autoLock, setAutoLock] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDrag = (e: DragEvent<HTMLDivElement | HTMLFormElement>) => {
@@ -121,14 +124,15 @@ const UploadForm = ({ classId, onSuccess }: UploadFormProps) => {
           fileType: fileDetails!.type,
           classId,
           dueDate: dueDate || undefined,
-          points: points ? parseInt(points) : undefined
+          points: points ? parseInt(points) : undefined,
+          locked: false // Initially not locked
         };
         
         saveAssignment(assignmentData);
         
         toast({
-          title: "Assignment Submitted",
-          description: "Your assignment has been successfully submitted.",
+          title: "Assignment Created",
+          description: "Your assignment has been successfully created.",
         });
         
         // Reset form
@@ -205,6 +209,17 @@ const UploadForm = ({ classId, onSuccess }: UploadFormProps) => {
             min="0"
           />
         </div>
+      </div>
+      
+      <div className="flex items-center space-x-2">
+        <Switch
+          id="auto-lock"
+          checked={autoLock}
+          onCheckedChange={setAutoLock}
+        />
+        <Label htmlFor="auto-lock" className="text-sm text-muted-foreground">
+          Automatically prevent submissions after due date
+        </Label>
       </div>
       
       <div className="space-y-2">
@@ -341,9 +356,9 @@ const UploadForm = ({ classId, onSuccess }: UploadFormProps) => {
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 />
               </svg>
-              Submitting...
+              Creating Assignment...
             </>
-          ) : "Submit Assignment"}
+          ) : "Create Assignment"}
         </Button>
       </div>
     </form>

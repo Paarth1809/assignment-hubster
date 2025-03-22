@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { getAssignments, deleteAssignment } from '@/utils/storage';
+import { getAssignments, deleteAssignment, lockAssignment, unlockAssignment, isAssignmentPastDue } from '@/utils/storage';
 import { Assignment } from '@/utils/types';
 import { useToast } from "@/hooks/use-toast";
 import { formatDate, formatFileSize, getStatusColor } from '@/utils/assignmentUtils';
@@ -59,6 +59,49 @@ const AssignmentList = ({ classId, onAssignmentUpdate, isTeacher = false }: Assi
     setSelectedAssignment(null);
   };
 
+  const handleLockToggle = (assignmentId: string, shouldLock: boolean) => {
+    if (shouldLock) {
+      const assignment = lockAssignment(assignmentId);
+      if (assignment) {
+        setAssignments(assignments.map(a => a.id === assignmentId ? { ...a, locked: true } : a));
+        toast({
+          title: "Assignment Locked",
+          description: "Students can no longer submit to this assignment.",
+        });
+      }
+    } else {
+      const assignment = unlockAssignment(assignmentId);
+      if (assignment) {
+        setAssignments(assignments.map(a => a.id === assignmentId ? { ...a, locked: false } : a));
+        toast({
+          title: "Assignment Unlocked",
+          description: "Students can now submit to this assignment.",
+        });
+      }
+    }
+    
+    if (onAssignmentUpdate) {
+      onAssignmentUpdate();
+    }
+  };
+
+  // Auto-check for past due assignments that should be locked
+  useEffect(() => {
+    if (isTeacher && assignments.length > 0) {
+      const pastDueAssignments = assignments.filter(
+        assignment => isAssignmentPastDue(assignment) && !assignment.locked
+      );
+      
+      if (pastDueAssignments.length > 0) {
+        // We don't automatically lock them, but we notify the teacher
+        toast({
+          title: `${pastDueAssignments.length} Past Due Assignment${pastDueAssignments.length > 1 ? 's' : ''}`,
+          description: "There are assignments past their due date that could be locked.",
+        });
+      }
+    }
+  }, [assignments, isTeacher, toast]);
+
   return (
     <div>
       {isLoading ? (
@@ -74,7 +117,9 @@ const AssignmentList = ({ classId, onAssignmentUpdate, isTeacher = false }: Assi
                 assignment={assignment}
                 getStatusColor={getStatusColor}
                 formatFileSize={formatFileSize}
-                onDelete={isTeacher ? handleDeleteClick : undefined}
+                onDelete={handleDeleteClick}
+                onLockToggle={isTeacher ? handleLockToggle : undefined}
+                isTeacher={isTeacher}
               />
             ))}
           </div>
@@ -85,7 +130,9 @@ const AssignmentList = ({ classId, onAssignmentUpdate, isTeacher = false }: Assi
               getStatusColor={getStatusColor}
               formatFileSize={formatFileSize}
               formatDate={formatDate}
-              onDelete={isTeacher ? handleDeleteClick : undefined}
+              onDelete={handleDeleteClick}
+              onLockToggle={isTeacher ? handleLockToggle : undefined}
+              isTeacher={isTeacher}
             />
           </div>
         </div>

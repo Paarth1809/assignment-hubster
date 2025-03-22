@@ -3,7 +3,7 @@ import { Assignment } from "@/utils/types";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import AssignmentList from "@/components/AssignmentList";
-import UploadForm from "@/components/UploadForm";
+import UploadForm from "@/components/upload/UploadForm";
 import { useState } from "react";
 import { getAssignmentsForClass } from "@/utils/storage";
 import { Card } from "@/components/ui/card";

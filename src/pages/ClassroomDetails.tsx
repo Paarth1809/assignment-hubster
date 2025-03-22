@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useParams, Navigate } from "react-router-dom";
+import { useParams, Navigate, Link } from "react-router-dom";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { getClassroomById, getAssignmentsForClass } from "@/utils/storage";
 import { Assignment } from "@/utils/types";
@@ -40,57 +40,53 @@ const ClassroomDetails = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#121212] text-white">
       <Navbar />
-      <main className="pt-20 pb-20">
+      <main className="pt-16">
         <ClassHeader classroom={classroom} />
 
-        <div className="border-b sticky top-16 bg-background z-10">
-          <div className="max-w-7xl mx-auto px-6">
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <ClassTabs activeTab={activeTab} onTabChange={setActiveTab}>
-                <div className="max-w-7xl mx-auto px-6 py-8">
-                  <TabsContent value="dashboard">
-                    <StreamTab classroom={classroom} assignments={assignments} />
-                  </TabsContent>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <ClassTabs activeTab={activeTab} onTabChange={setActiveTab}>
+            <div className="max-w-7xl mx-auto px-6 py-8">
+              <TabsContent value="dashboard">
+                <StreamTab classroom={classroom} assignments={assignments} />
+              </TabsContent>
 
-                  <TabsContent value="assignments">
-                    <ClassworkTab 
-                      classId={classroom.id} 
-                      isTeacher={profile?.role === "teacher"}
-                    />
-                  </TabsContent>
+              <TabsContent value="assignments">
+                <ClassworkTab 
+                  classId={classroom.id} 
+                  isTeacher={profile?.role === "teacher"}
+                />
+              </TabsContent>
 
-                  <TabsContent value="live">
-                    <LiveTab 
-                      classId={classroom.id}
-                      currentUser={profile}
-                    />
-                  </TabsContent>
+              <TabsContent value="live">
+                <LiveTab 
+                  classId={classroom.id}
+                  currentUser={profile}
+                />
+              </TabsContent>
 
-                  <TabsContent value="submissions">
-                    <ClassworkTab 
-                      classId={classroom.id} 
-                      isTeacher={profile?.role === "teacher"}
-                    />
-                  </TabsContent>
+              <TabsContent value="submissions">
+                <ClassworkTab 
+                  classId={classroom.id} 
+                  isTeacher={profile?.role === "teacher"}
+                />
+              </TabsContent>
 
-                  <TabsContent value="people">
-                    <PeopleTab classroom={classroom} currentUser={profile} />
-                  </TabsContent>
+              <TabsContent value="people">
+                <PeopleTab classroom={classroom} currentUser={profile} />
+              </TabsContent>
 
-                  <TabsContent value="grades">
-                    <GradesTab assignments={assignments} />
-                  </TabsContent>
+              <TabsContent value="grades">
+                <GradesTab assignments={assignments} />
+              </TabsContent>
 
-                  <TabsContent value="settings">
-                    <SettingsTab classroom={classroom} currentUser={profile} />
-                  </TabsContent>
-                </div>
-              </ClassTabs>
-            </Tabs>
-          </div>
-        </div>
+              <TabsContent value="settings">
+                <SettingsTab classroom={classroom} currentUser={profile} />
+              </TabsContent>
+            </div>
+          </ClassTabs>
+        </Tabs>
       </main>
       <Footer />
     </div>

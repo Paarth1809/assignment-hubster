@@ -22,9 +22,12 @@ const ClassworkTab = ({ classId, isTeacher = false }: ClassworkTabProps) => {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h2 className="text-xl font-medium">Assignments</h2>
+        <h2 className="text-xl font-medium text-white">Assignments</h2>
         {isTeacher && (
-          <Button onClick={() => setShowUploadForm(!showUploadForm)}>
+          <Button 
+            onClick={() => setShowUploadForm(!showUploadForm)}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
             <PlusCircle className="h-4 w-4 mr-2" />
             {showUploadForm ? "Cancel" : "Create Assignment"}
           </Button>
@@ -32,8 +35,8 @@ const ClassworkTab = ({ classId, isTeacher = false }: ClassworkTabProps) => {
       </div>
       
       {showUploadForm && isTeacher && (
-        <Card className="glass rounded-xl p-4 sm:p-6 shadow-md mb-8">
-          <h3 className="text-lg font-medium mb-4">Create New Assignment</h3>
+        <Card className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl p-4 sm:p-6 shadow-md mb-8">
+          <h3 className="text-lg font-medium mb-4 text-white">Create New Assignment</h3>
           <UploadForm classId={classId} onSuccess={() => {
             setShowUploadForm(false);
             setAssignments(getAssignmentsForClass(classId));

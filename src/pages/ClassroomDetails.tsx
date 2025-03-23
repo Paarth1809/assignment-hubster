@@ -39,6 +39,8 @@ const ClassroomDetails = () => {
     return <NotFoundContent />;
   }
 
+  const isTeacher = profile?.role === "teacher";
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -60,7 +62,7 @@ const ClassroomDetails = () => {
                 <div className="max-w-7xl mx-auto px-6 py-8">
                   <ClassworkTab 
                     classId={classroom.id} 
-                    isTeacher={profile?.role === "teacher"}
+                    isTeacher={isTeacher}
                   />
                 </div>
               </TabsContent>
@@ -78,7 +80,7 @@ const ClassroomDetails = () => {
                 <div className="max-w-7xl mx-auto px-6 py-8">
                   <ClassworkTab 
                     classId={classroom.id} 
-                    isTeacher={profile?.role === "teacher"} 
+                    isTeacher={isTeacher} 
                   />
                 </div>
               </TabsContent>

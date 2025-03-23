@@ -50,44 +50,56 @@ const ClassroomDetails = () => {
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <ClassTabs activeTab={activeTab} onTabChange={setActiveTab} />
               
-              <div className="max-w-7xl mx-auto px-6 py-8">
-                <TabsContent value="dashboard">
+              <TabsContent value="dashboard">
+                <div className="max-w-7xl mx-auto px-6 py-8">
                   <StreamTab classroom={classroom} assignments={assignments} />
-                </TabsContent>
+                </div>
+              </TabsContent>
 
-                <TabsContent value="assignments">
+              <TabsContent value="assignments">
+                <div className="max-w-7xl mx-auto px-6 py-8">
                   <ClassworkTab 
                     classId={classroom.id} 
                     isTeacher={profile?.role === "teacher"}
                   />
-                </TabsContent>
+                </div>
+              </TabsContent>
 
-                <TabsContent value="live">
+              <TabsContent value="live">
+                <div className="max-w-7xl mx-auto px-6 py-8">
                   <LiveTab 
                     classId={classroom.id}
                     currentUser={profile}
                   />
-                </TabsContent>
+                </div>
+              </TabsContent>
 
-                <TabsContent value="submissions">
+              <TabsContent value="submissions">
+                <div className="max-w-7xl mx-auto px-6 py-8">
                   <ClassworkTab 
                     classId={classroom.id} 
                     isTeacher={profile?.role === "teacher"} 
                   />
-                </TabsContent>
+                </div>
+              </TabsContent>
 
-                <TabsContent value="people">
+              <TabsContent value="people">
+                <div className="max-w-7xl mx-auto px-6 py-8">
                   <PeopleTab classroom={classroom} currentUser={profile} />
-                </TabsContent>
+                </div>
+              </TabsContent>
 
-                <TabsContent value="grades">
+              <TabsContent value="grades">
+                <div className="max-w-7xl mx-auto px-6 py-8">
                   <GradesTab assignments={assignments} />
-                </TabsContent>
+                </div>
+              </TabsContent>
 
-                <TabsContent value="settings">
+              <TabsContent value="settings">
+                <div className="max-w-7xl mx-auto px-6 py-8">
                   <SettingsTab classroom={classroom} currentUser={profile} />
-                </TabsContent>
-              </div>
+                </div>
+              </TabsContent>
             </Tabs>
           </div>
         </div>

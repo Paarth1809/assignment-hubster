@@ -1,6 +1,6 @@
 
-import { useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -16,7 +16,9 @@ export default function Auth() {
   const { signIn, signUp, user, isLoading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<string>('login');
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState<string>(tabParam === 'register' ? 'register' : 'login');
   
   // Login form state
   const [email, setEmail] = useState('');
@@ -30,6 +32,15 @@ export default function Auth() {
   const [name, setName] = useState('');
   const [role, setRole] = useState<'student' | 'teacher'>('student');
   const [isRegistering, setIsRegistering] = useState(false);
+
+  // Update the active tab when the URL query parameter changes
+  useEffect(() => {
+    if (tabParam === 'register') {
+      setActiveTab('register');
+    } else if (tabParam === 'login') {
+      setActiveTab('login');
+    }
+  }, [tabParam]);
 
   // Redirect if already logged in
   if (user && !isLoading) {

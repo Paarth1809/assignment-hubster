@@ -48,46 +48,46 @@ const ClassroomDetails = () => {
         <div className="border-b sticky top-16 bg-background z-10">
           <div className="max-w-7xl mx-auto px-6">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <ClassTabs activeTab={activeTab} onTabChange={setActiveTab}>
-                <div className="max-w-7xl mx-auto px-6 py-8">
-                  <TabsContent value="dashboard">
-                    <StreamTab classroom={classroom} assignments={assignments} />
-                  </TabsContent>
+              <ClassTabs activeTab={activeTab} onTabChange={setActiveTab} />
+              
+              <div className="max-w-7xl mx-auto px-6 py-8">
+                <TabsContent value="dashboard">
+                  <StreamTab classroom={classroom} assignments={assignments} />
+                </TabsContent>
 
-                  <TabsContent value="assignments">
-                    <ClassworkTab 
-                      classId={classroom.id} 
-                      isTeacher={profile?.role === "teacher"}
-                    />
-                  </TabsContent>
+                <TabsContent value="assignments">
+                  <ClassworkTab 
+                    classId={classroom.id} 
+                    isTeacher={profile?.role === "teacher"}
+                  />
+                </TabsContent>
 
-                  <TabsContent value="live">
-                    <LiveTab 
-                      classId={classroom.id}
-                      currentUser={profile}
-                    />
-                  </TabsContent>
+                <TabsContent value="live">
+                  <LiveTab 
+                    classId={classroom.id}
+                    currentUser={profile}
+                  />
+                </TabsContent>
 
-                  <TabsContent value="submissions">
-                    <ClassworkTab 
-                      classId={classroom.id} 
-                      isTeacher={profile?.role === "teacher"}
-                    />
-                  </TabsContent>
+                <TabsContent value="submissions">
+                  <ClassworkTab 
+                    classId={classroom.id} 
+                    isTeacher={profile?.role === "teacher"} 
+                  />
+                </TabsContent>
 
-                  <TabsContent value="people">
-                    <PeopleTab classroom={classroom} currentUser={profile} />
-                  </TabsContent>
+                <TabsContent value="people">
+                  <PeopleTab classroom={classroom} currentUser={profile} />
+                </TabsContent>
 
-                  <TabsContent value="grades">
-                    <GradesTab assignments={assignments} />
-                  </TabsContent>
+                <TabsContent value="grades">
+                  <GradesTab assignments={assignments} />
+                </TabsContent>
 
-                  <TabsContent value="settings">
-                    <SettingsTab classroom={classroom} currentUser={profile} />
-                  </TabsContent>
-                </div>
-              </ClassTabs>
+                <TabsContent value="settings">
+                  <SettingsTab classroom={classroom} currentUser={profile} />
+                </TabsContent>
+              </div>
             </Tabs>
           </div>
         </div>

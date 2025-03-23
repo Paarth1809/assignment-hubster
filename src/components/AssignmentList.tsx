@@ -14,9 +14,15 @@ interface AssignmentListProps {
   classId?: string;
   onAssignmentUpdate?: () => void;
   isTeacher?: boolean;
+  onEditAssignment?: (assignment: Assignment) => void;
 }
 
-const AssignmentList = ({ classId, onAssignmentUpdate, isTeacher = false }: AssignmentListProps) => {
+const AssignmentList = ({ 
+  classId, 
+  onAssignmentUpdate, 
+  isTeacher = false,
+  onEditAssignment 
+}: AssignmentListProps) => {
   const { toast } = useToast();
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -59,6 +65,12 @@ const AssignmentList = ({ classId, onAssignmentUpdate, isTeacher = false }: Assi
     setSelectedAssignment(null);
   };
 
+  const handleEditClick = (assignment: Assignment) => {
+    if (onEditAssignment) {
+      onEditAssignment(assignment);
+    }
+  };
+
   return (
     <div>
       {isLoading ? (
@@ -75,6 +87,7 @@ const AssignmentList = ({ classId, onAssignmentUpdate, isTeacher = false }: Assi
                 getStatusColor={getStatusColor}
                 formatFileSize={formatFileSize}
                 onDelete={isTeacher ? handleDeleteClick : undefined}
+                onEdit={isTeacher ? handleEditClick : undefined}
               />
             ))}
           </div>
@@ -86,6 +99,7 @@ const AssignmentList = ({ classId, onAssignmentUpdate, isTeacher = false }: Assi
               formatFileSize={formatFileSize}
               formatDate={formatDate}
               onDelete={isTeacher ? handleDeleteClick : undefined}
+              onEdit={isTeacher ? handleEditClick : undefined}
             />
           </div>
         </div>

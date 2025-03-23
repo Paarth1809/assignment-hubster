@@ -18,8 +18,10 @@ const ClassworkTab = ({ classId, isTeacher = false }: ClassworkTabProps) => {
   const { toast } = useToast();
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [assignments, setAssignments] = useState<Assignment[]>(getAssignmentsForClass(classId));
+  const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(null);
 
   const handleCreateAssignment = () => {
+    setEditingAssignment(null);
     setShowUploadForm(!showUploadForm);
     
     if (!showUploadForm) {
@@ -31,6 +33,24 @@ const ClassworkTab = ({ classId, isTeacher = false }: ClassworkTabProps) => {
         });
       }, 100);
     }
+  };
+
+  const handleEditAssignment = (assignment: Assignment) => {
+    setEditingAssignment(assignment);
+    setShowUploadForm(true);
+    
+    // Scroll to the form when editing
+    setTimeout(() => {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    }, 100);
+  };
+
+  const handleFormClose = () => {
+    setShowUploadForm(false);
+    setEditingAssignment(null);
   };
 
   return (
@@ -56,15 +76,25 @@ const ClassworkTab = ({ classId, isTeacher = false }: ClassworkTabProps) => {
       
       {showUploadForm && isTeacher && (
         <Card className="glass rounded-xl p-4 sm:p-6 shadow-md mb-8">
-          <h3 className="text-lg font-medium mb-4">Create New Assignment</h3>
-          <UploadForm classId={classId} onSuccess={() => {
-            setShowUploadForm(false);
-            setAssignments(getAssignmentsForClass(classId));
-            toast({
-              title: "Assignment Created",
-              description: "The assignment has been successfully created and is now available to your students.",
-            });
-          }} />
+          <h3 className="text-lg font-medium mb-4">
+            {editingAssignment ? "Edit Assignment" : "Create New Assignment"}
+          </h3>
+          <UploadForm 
+            classId={classId} 
+            assignment={editingAssignment}
+            onSuccess={() => {
+              setShowUploadForm(false);
+              setEditingAssignment(null);
+              setAssignments(getAssignmentsForClass(classId));
+              toast({
+                title: editingAssignment ? "Assignment Updated" : "Assignment Created",
+                description: editingAssignment 
+                  ? "The assignment has been successfully updated." 
+                  : "The assignment has been successfully created and is now available to your students.",
+              });
+            }} 
+            onCancel={handleFormClose}
+          />
         </Card>
       )}
       
@@ -72,6 +102,7 @@ const ClassworkTab = ({ classId, isTeacher = false }: ClassworkTabProps) => {
         classId={classId} 
         onAssignmentUpdate={() => setAssignments(getAssignmentsForClass(classId))}
         isTeacher={isTeacher}
+        onEditAssignment={isTeacher ? handleEditAssignment : undefined}
       />
     </div>
   );

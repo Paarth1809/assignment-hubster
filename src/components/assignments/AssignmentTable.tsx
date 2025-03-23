@@ -16,7 +16,8 @@ interface AssignmentTableProps {
   getStatusColor: (status: Assignment['status']) => string;
   formatFileSize: (bytes: number) => string;
   formatDate: (dateString: string) => string;
-  onDelete: (id: string) => void;
+  onDelete?: (id: string) => void;
+  onEdit?: (assignment: Assignment) => void;
 }
 
 const AssignmentTable = ({ 
@@ -24,7 +25,8 @@ const AssignmentTable = ({
   getStatusColor, 
   formatFileSize, 
   formatDate, 
-  onDelete 
+  onDelete,
+  onEdit 
 }: AssignmentTableProps) => {
   return (
     <Table>
@@ -89,16 +91,27 @@ const AssignmentTable = ({
             </TableCell>
             <TableCell className="px-6 py-4 whitespace-nowrap text-sm">
               <div className="flex space-x-2">
+                {onEdit && (
+                  <Button 
+                    variant="ghost" 
+                    className="h-8 px-2 text-primary"
+                    onClick={() => onEdit(assignment)}
+                  >
+                    Edit
+                  </Button>
+                )}
                 <Button variant="ghost" className="h-8 px-2 text-primary">
                   Download
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  className="h-8 px-2 text-destructive"
-                  onClick={() => onDelete(assignment.id)}
-                >
-                  Delete
-                </Button>
+                {onDelete && (
+                  <Button 
+                    variant="ghost" 
+                    className="h-8 px-2 text-destructive"
+                    onClick={() => onDelete(assignment.id)}
+                  >
+                    Delete
+                  </Button>
+                )}
               </div>
             </TableCell>
           </TableRow>

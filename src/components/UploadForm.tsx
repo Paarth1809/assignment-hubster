@@ -1,11 +1,11 @@
-
-import { useState, useRef, DragEvent, ChangeEvent } from 'react';
+import { useState, useRef, DragEvent, ChangeEvent, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
-import { saveAssignment } from '@/utils/storage';
+import { saveAssignment, updateAssignment } from '@/utils/storage';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Assignment } from '@/utils/types';
 
 interface FileDetails {
   name: string;
@@ -15,10 +15,12 @@ interface FileDetails {
 
 interface UploadFormProps {
   classId: string;
+  assignment?: Assignment | null;
   onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
-const UploadForm = ({ classId, onSuccess }: UploadFormProps) => {
+const UploadForm = ({ classId, assignment, onSuccess, onCancel }: UploadFormProps) => {
   const { toast } = useToast();
   const [dragActive, setDragActive] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -29,6 +31,25 @@ const UploadForm = ({ classId, onSuccess }: UploadFormProps) => {
   const [points, setPoints] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Populate form when editing an assignment
+  useEffect(() => {
+    if (assignment) {
+      setTitle(assignment.title);
+      setDescription(assignment.description || '');
+      setDueDate(assignment.dueDate || '');
+      setPoints(assignment.points ? assignment.points.toString() : '');
+      
+      // Set file details from existing assignment
+      if (assignment.fileName) {
+        setFileDetails({
+          name: assignment.fileName,
+          size: assignment.fileSize,
+          type: assignment.fileType
+        });
+      }
+    }
+  }, [assignment]);
 
   const handleDrag = (e: DragEvent<HTMLDivElement | HTMLFormElement>) => {
     e.preventDefault();
@@ -89,7 +110,7 @@ const UploadForm = ({ classId, onSuccess }: UploadFormProps) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!file) {
+    if (!assignment && !file) {
       toast({
         title: "No file selected",
         description: "Please select a file to upload",
@@ -113,23 +134,51 @@ const UploadForm = ({ classId, onSuccess }: UploadFormProps) => {
     // For now, we'll simulate a submission delay
     setTimeout(() => {
       try {
+        // If we're editing, we need to keep the existing file details if no new file was uploaded
+        const finalFileDetails = file 
+          ? { 
+              fileName: file.name, 
+              fileSize: file.size, 
+              fileType: file.type 
+            }
+          : assignment 
+            ? { 
+                fileName: assignment.fileName, 
+                fileSize: assignment.fileSize, 
+                fileType: assignment.fileType 
+              }
+            : fileDetails;
+            
+        if (!finalFileDetails) {
+          throw new Error("File details missing");
+        }
+            
         const assignmentData = {
+          ...(assignment ? { id: assignment.id } : {}),
           title,
           description: description.trim() || undefined,
-          fileName: fileDetails!.name,
-          fileSize: fileDetails!.size,
-          fileType: fileDetails!.type,
+          fileName: finalFileDetails.fileName,
+          fileSize: finalFileDetails.fileSize,
+          fileType: finalFileDetails.fileType,
           classId,
           dueDate: dueDate || undefined,
-          points: points ? parseInt(points) : undefined
+          points: points ? parseInt(points) : undefined,
+          ...(assignment ? { 
+            dateSubmitted: assignment.dateSubmitted,
+            status: assignment.status 
+          } : {})
         };
         
-        saveAssignment(assignmentData);
-        
-        toast({
-          title: "Assignment Submitted",
-          description: "Your assignment has been successfully submitted.",
-        });
+        if (assignment) {
+          // Update existing assignment
+          updateAssignment({
+            ...assignment,
+            ...assignmentData
+          });
+        } else {
+          // Create new assignment
+          saveAssignment(assignmentData);
+        }
         
         // Reset form
         setTitle('');
@@ -281,7 +330,7 @@ const UploadForm = ({ classId, onSuccess }: UploadFormProps) => {
                 strokeLinejoin="round" 
                 className="text-primary"
               >
-                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2H6a2 2 0 0 0-2 2v4" />
                 <polyline points="14 2 14 8 20 8" />
               </svg>
             </div>
@@ -313,7 +362,17 @@ const UploadForm = ({ classId, onSuccess }: UploadFormProps) => {
         )}
       </div>
       
-      <div className="pt-4">
+      <div className="flex justify-between pt-4 gap-4">
+        {onCancel && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+            className="w-full"
+          >
+            Cancel
+          </Button>
+        )}
         <Button
           type="submit"
           disabled={isSubmitting}
@@ -341,9 +400,9 @@ const UploadForm = ({ classId, onSuccess }: UploadFormProps) => {
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 />
               </svg>
-              Submitting...
+              {assignment ? "Updating..." : "Submitting..."}
             </>
-          ) : "Submit Assignment"}
+          ) : assignment ? "Update Assignment" : "Submit Assignment"}
         </Button>
       </div>
     </form>

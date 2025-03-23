@@ -7,14 +7,16 @@ interface AssignmentCardMobileProps {
   assignment: Assignment;
   getStatusColor: (status: Assignment['status']) => string;
   formatFileSize: (bytes: number) => string;
-  onDelete: (id: string) => void;
+  onDelete?: (id: string) => void;
+  onEdit?: (assignment: Assignment) => void;
 }
 
 const AssignmentCardMobile = ({ 
   assignment, 
   getStatusColor, 
   formatFileSize, 
-  onDelete 
+  onDelete,
+  onEdit
 }: AssignmentCardMobileProps) => {
   return (
     <div className="glass-hover p-4 rounded-lg">
@@ -53,18 +55,30 @@ const AssignmentCardMobile = ({
           {assignment.status.charAt(0).toUpperCase() + assignment.status.slice(1)}
         </span>
       </div>
-      <div className="grid grid-cols-2 mt-4 gap-2">
+      <div className="grid grid-cols-3 mt-4 gap-2">
+        {onEdit && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="w-full"
+            onClick={() => onEdit(assignment)}
+          >
+            Edit
+          </Button>
+        )}
         <Button variant="outline" size="sm" className="w-full">
           Download
         </Button>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="w-full text-destructive hover:text-destructive"
-          onClick={() => onDelete(assignment.id)}
-        >
-          Delete
-        </Button>
+        {onDelete && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="w-full text-destructive hover:text-destructive"
+            onClick={() => onDelete(assignment.id)}
+          >
+            Delete
+          </Button>
+        )}
       </div>
     </div>
   );

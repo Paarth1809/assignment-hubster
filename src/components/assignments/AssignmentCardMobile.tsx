@@ -2,6 +2,9 @@
 import React from 'react';
 import { Assignment } from '@/utils/types';
 import { Button } from "@/components/ui/button";
+import { isAssignmentPastDue, isSubmissionAllowed } from '@/utils/storage/assignments';
+import { formatDate } from '@/utils/assignmentUtils';
+import { CalendarClock, Lock } from 'lucide-react';
 
 interface AssignmentCardMobileProps {
   assignment: Assignment;
@@ -18,6 +21,9 @@ const AssignmentCardMobile = ({
   onDelete,
   onEdit
 }: AssignmentCardMobileProps) => {
+  const isPastDue = isAssignmentPastDue(assignment);
+  const submissionAllowed = isSubmissionAllowed(assignment);
+  
   return (
     <div className="glass-hover p-4 rounded-lg">
       <div className="flex justify-between items-start">
@@ -49,6 +55,18 @@ const AssignmentCardMobile = ({
                 {formatFileSize(assignment.fileSize)}
               </span>
             </div>
+            
+            {assignment.dueDate && (
+              <div className="flex items-center mt-1 text-xs">
+                <CalendarClock className="h-3 w-3 mr-1" />
+                <span className={isPastDue ? "text-destructive" : "text-muted-foreground"}>
+                  Due: {formatDate(assignment.dueDate)}
+                </span>
+                {!submissionAllowed && (
+                  <Lock className="h-3 w-3 ml-2 text-destructive" />
+                )}
+              </div>
+            )}
           </div>
         </div>
         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(assignment.status)}`}>

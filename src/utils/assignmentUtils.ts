@@ -4,10 +4,15 @@ import { Assignment } from "./types";
 // Format date function
 export const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
+  
+  // Format date with time
   return new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    hour12: true
   }).format(date);
 };
 

@@ -1,3 +1,4 @@
+
 import { useState, useRef, DragEvent, ChangeEvent, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { saveAssignment, updateAssignment } from '@/utils/storage';
@@ -28,6 +29,8 @@ const UploadForm = ({ classId, assignment, onSuccess, onCancel }: UploadFormProp
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState('');
+  const [dueTime, setDueTime] = useState('');
+  const [allowLateSubmissions, setAllowLateSubmissions] = useState(true);
   const [points, setPoints] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -37,7 +40,20 @@ const UploadForm = ({ classId, assignment, onSuccess, onCancel }: UploadFormProp
     if (assignment) {
       setTitle(assignment.title);
       setDescription(assignment.description || '');
-      setDueDate(assignment.dueDate || '');
+      
+      // Handle due date and time if it exists
+      if (assignment.dueDate) {
+        const dueDateTime = new Date(assignment.dueDate);
+        // Format date as YYYY-MM-DD for the date input
+        setDueDate(dueDateTime.toISOString().split('T')[0]);
+        
+        // Format time as HH:MM for the time input
+        const hours = dueDateTime.getHours().toString().padStart(2, '0');
+        const minutes = dueDateTime.getMinutes().toString().padStart(2, '0');
+        setDueTime(`${hours}:${minutes}`);
+      }
+      
+      setAllowLateSubmissions(assignment.allowLateSubmissions !== false);
       setPoints(assignment.points ? assignment.points.toString() : '');
       
       // Set file details from existing assignment
@@ -147,10 +163,33 @@ const UploadForm = ({ classId, assignment, onSuccess, onCancel }: UploadFormProp
                 fileSize: assignment.fileSize, 
                 fileType: assignment.fileType 
               }
-            : fileDetails;
+            : fileDetails 
+              ? {
+                  fileName: fileDetails.name,
+                  fileSize: fileDetails.size,
+                  fileType: fileDetails.type
+                }
+              : null;
             
         if (!finalFileDetails) {
           throw new Error("File details missing");
+        }
+        
+        // Process due date and time
+        let dueDateISO: string | undefined = undefined;
+        if (dueDate) {
+          const dateObj = new Date(dueDate);
+          
+          // Add time if specified
+          if (dueTime) {
+            const [hours, minutes] = dueTime.split(':').map(Number);
+            dateObj.setHours(hours, minutes);
+          } else {
+            // Default to end of day if no time specified
+            dateObj.setHours(23, 59, 59);
+          }
+          
+          dueDateISO = dateObj.toISOString();
         }
             
         const assignmentData = {
@@ -161,7 +200,8 @@ const UploadForm = ({ classId, assignment, onSuccess, onCancel }: UploadFormProp
           fileSize: finalFileDetails.fileSize,
           fileType: finalFileDetails.fileType,
           classId,
-          dueDate: dueDate || undefined,
+          dueDate: dueDateISO,
+          allowLateSubmissions,
           points: points ? parseInt(points) : undefined,
           ...(assignment ? { 
             dateSubmitted: assignment.dateSubmitted,
@@ -186,6 +226,8 @@ const UploadForm = ({ classId, assignment, onSuccess, onCancel }: UploadFormProp
         setFile(null);
         setFileDetails(null);
         setDueDate('');
+        setDueTime('');
+        setAllowLateSubmissions(true);
         setPoints('');
         
         if (fileInputRef.current) {
@@ -231,7 +273,7 @@ const UploadForm = ({ classId, assignment, onSuccess, onCancel }: UploadFormProp
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="dueDate">
-            Due Date (Optional)
+            Due Date
           </Label>
           <Input
             id="dueDate"
@@ -242,23 +284,49 @@ const UploadForm = ({ classId, assignment, onSuccess, onCancel }: UploadFormProp
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="points">
-            Points (Optional)
+          <Label htmlFor="dueTime">
+            Due Time
           </Label>
           <Input
-            id="points"
-            type="number"
-            value={points}
-            onChange={(e) => setPoints(e.target.value)}
-            placeholder="100"
-            min="0"
+            id="dueTime"
+            type="time"
+            value={dueTime}
+            onChange={(e) => setDueTime(e.target.value)}
+            placeholder="23:59"
           />
         </div>
       </div>
       
+      <div className="flex items-center space-x-2">
+        <input
+          type="checkbox"
+          id="allowLateSubmissions"
+          checked={allowLateSubmissions}
+          onChange={(e) => setAllowLateSubmissions(e.target.checked)}
+          className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+        />
+        <Label htmlFor="allowLateSubmissions" className="text-sm font-normal">
+          Allow submissions after due date
+        </Label>
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="points">
+          Points
+        </Label>
+        <Input
+          id="points"
+          type="number"
+          value={points}
+          onChange={(e) => setPoints(e.target.value)}
+          placeholder="100"
+          min="0"
+        />
+      </div>
+      
       <div className="space-y-2">
         <Label htmlFor="description">
-          Description (Optional)
+          Description
         </Label>
         <Textarea
           id="description"

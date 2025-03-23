@@ -12,6 +12,8 @@ export interface Assignment {
   grade?: string;
   classId: string;
   dueDate?: string;
+  dueTime?: string;
+  allowLateSubmissions?: boolean;
   points?: number;
 }
 

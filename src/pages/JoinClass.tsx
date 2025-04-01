@@ -45,7 +45,8 @@ const JoinClass = () => {
           return;
         }
 
-        const result = joinClassroom(code.toUpperCase(), user.id);
+        // Use the code as is - normalization happens in the joinClassroom function
+        const result = joinClassroom(code, user.id);
         
         if (result) {
           toast({

@@ -68,7 +68,15 @@ export const getUserClassrooms = (): Classroom[] => {
 // Join a classroom
 export const joinClassroom = (code: string, userId: string): Classroom | null => {
   const classrooms = getClassrooms();
-  const classroom = classrooms.find(c => c.enrollmentCode === code);
+  
+  // Normalize the input code for case-insensitive comparison
+  const normalizedInputCode = code.trim().toUpperCase();
+  
+  // Debug to see what's being compared
+  console.log("Trying to join with code:", normalizedInputCode);
+  console.log("Available classrooms:", classrooms.map(c => c.enrollmentCode));
+  
+  const classroom = classrooms.find(c => c.enrollmentCode.toUpperCase() === normalizedInputCode);
   
   if (classroom) {
     // Update the user's enrolledClasses to include this classroom

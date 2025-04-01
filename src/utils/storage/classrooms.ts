@@ -1,7 +1,7 @@
 
 import { Classroom, UserProfile } from "../types";
 import { getLocalStorage, setLocalStorage } from "./base";
-import { getCurrentUser } from "./users";
+import { getCurrentUser, saveUserProfile } from "./users";
 
 // Classrooms
 const CLASSROOMS_STORAGE_KEY = 'classrooms';
@@ -71,8 +71,20 @@ export const joinClassroom = (code: string, userId: string): Classroom | null =>
   const classroom = classrooms.find(c => c.enrollmentCode === code);
   
   if (classroom) {
-    // In a real app, we would add the user to the classroom here
-    // For now, we'll just return the classroom
+    // Update the user's enrolledClasses to include this classroom
+    const currentUser = getCurrentUser();
+    if (currentUser) {
+      // Make sure enrolledClasses exists and doesn't already include this class
+      if (!currentUser.enrolledClasses) {
+        currentUser.enrolledClasses = [];
+      }
+      
+      if (!currentUser.enrolledClasses.includes(classroom.id)) {
+        currentUser.enrolledClasses.push(classroom.id);
+        saveUserProfile(currentUser);
+      }
+    }
+    
     return classroom;
   }
   

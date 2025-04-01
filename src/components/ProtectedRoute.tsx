@@ -36,7 +36,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   }
 
   if (!user) {
-    // Redirect to auth page if not logged in
+    // Redirect to auth page if not logged in, preserving the intended destination
     return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
   }
 

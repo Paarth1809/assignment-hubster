@@ -40,6 +40,7 @@ export interface Classroom {
   description?: string;
   createdAt: string;
   teacherName: string;
+  teacherId?: string; // Added teacherId to track who created the class
   coverImage?: string;
   enrollmentCode: string;
   liveClasses?: LiveClass[];

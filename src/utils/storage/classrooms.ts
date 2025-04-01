@@ -35,6 +35,12 @@ export const createClassroom = (classroom: Classroom): Classroom => {
 
 // Save a classroom from form data
 export const saveClassroom = (formData: any): Classroom => {
+  // Get current user
+  const currentUser = getCurrentUser();
+  if (!currentUser) {
+    throw new Error("User must be logged in to create a classroom");
+  }
+  
   // Generate a random ID
   const id = Math.random().toString(36).substring(2, 10);
   // Generate a random enrollment code (6 characters, uppercase)
@@ -47,9 +53,22 @@ export const saveClassroom = (formData: any): Classroom => {
     subject: formData.subject || undefined,
     description: formData.description || undefined,
     createdAt: new Date().toISOString(),
-    teacherName: formData.teacherName || "Teacher",
+    teacherName: currentUser.name || "Teacher",
+    teacherId: currentUser.id, // Store the teacher's ID
     enrollmentCode,
   };
+  
+  // Add the new classroom to the user's profile if they're a teacher
+  if (currentUser.role === 'teacher') {
+    if (!currentUser.enrolledClasses) {
+      currentUser.enrolledClasses = [];
+    }
+    
+    if (!currentUser.enrolledClasses.includes(id)) {
+      currentUser.enrolledClasses.push(id);
+      saveUserProfile(currentUser);
+    }
+  }
   
   return createClassroom(newClassroom);
 };

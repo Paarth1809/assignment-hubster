@@ -135,3 +135,20 @@ export const deleteClassroom = (classroomId: string): void => {
   const filteredClassrooms = classrooms.filter(c => c.id !== classroomId);
   setLocalStorage(CLASSROOMS_STORAGE_KEY, filteredClassrooms);
 };
+
+// Leave a classroom
+export const leaveClassroom = (classroomId: string): boolean => {
+  const currentUser = getCurrentUser();
+  if (!currentUser || !currentUser.enrolledClasses) {
+    return false;
+  }
+  
+  // Remove the classroom from user's enrolledClasses
+  if (currentUser.enrolledClasses.includes(classroomId)) {
+    currentUser.enrolledClasses = currentUser.enrolledClasses.filter(id => id !== classroomId);
+    saveUserProfile(currentUser);
+    return true;
+  }
+  
+  return false;
+};

@@ -40,8 +40,14 @@ const Index = () => {
     };
   }, []);
 
-  // Get user classrooms - only the ones they created or joined
-  const userClassrooms = getUserClassrooms();
+  // Get all classrooms or only joined classrooms based on role
+  const allClassrooms = getClassrooms();
+  const userClassrooms = profile?.role === 'student' 
+    ? (profile.enrolledClasses?.length ? 
+        allClassrooms.filter(c => profile.enrolledClasses.includes(c.id)) : 
+        [])
+    : allClassrooms; // Teachers see all classrooms
+  
   const isTeacher = profile?.role === 'teacher';
 
   return (

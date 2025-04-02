@@ -1,7 +1,7 @@
 
 import { Classroom, UserProfile } from "../types";
 import { getLocalStorage, setLocalStorage } from "./base";
-import { getCurrentUser, saveUserProfile } from "./users";
+import { getCurrentUser } from "./users";
 
 // Classrooms
 const CLASSROOMS_STORAGE_KEY = 'classrooms';
@@ -35,12 +35,6 @@ export const createClassroom = (classroom: Classroom): Classroom => {
 
 // Save a classroom from form data
 export const saveClassroom = (formData: any): Classroom => {
-  // Get current user
-  const currentUser = getCurrentUser();
-  if (!currentUser) {
-    throw new Error("User must be logged in to create a classroom");
-  }
-  
   // Generate a random ID
   const id = Math.random().toString(36).substring(2, 10);
   // Generate a random enrollment code (6 characters, uppercase)
@@ -53,22 +47,9 @@ export const saveClassroom = (formData: any): Classroom => {
     subject: formData.subject || undefined,
     description: formData.description || undefined,
     createdAt: new Date().toISOString(),
-    teacherName: currentUser.name || "Teacher",
-    teacherId: currentUser.id, // Store the teacher's ID
+    teacherName: formData.teacherName || "Teacher",
     enrollmentCode,
   };
-  
-  // Add the new classroom to the user's profile if they're a teacher
-  if (currentUser.role === 'teacher') {
-    if (!currentUser.enrolledClasses) {
-      currentUser.enrolledClasses = [];
-    }
-    
-    if (!currentUser.enrolledClasses.includes(id)) {
-      currentUser.enrolledClasses.push(id);
-      saveUserProfile(currentUser);
-    }
-  }
   
   return createClassroom(newClassroom);
 };
@@ -87,31 +68,11 @@ export const getUserClassrooms = (): Classroom[] => {
 // Join a classroom
 export const joinClassroom = (code: string, userId: string): Classroom | null => {
   const classrooms = getClassrooms();
-  
-  // Normalize the input code for case-insensitive comparison
-  const normalizedInputCode = code.trim().toUpperCase();
-  
-  // Debug to see what's being compared
-  console.log("Trying to join with code:", normalizedInputCode);
-  console.log("Available classrooms:", classrooms.map(c => c.enrollmentCode));
-  
-  const classroom = classrooms.find(c => c.enrollmentCode.toUpperCase() === normalizedInputCode);
+  const classroom = classrooms.find(c => c.enrollmentCode === code);
   
   if (classroom) {
-    // Update the user's enrolledClasses to include this classroom
-    const currentUser = getCurrentUser();
-    if (currentUser) {
-      // Make sure enrolledClasses exists and doesn't already include this class
-      if (!currentUser.enrolledClasses) {
-        currentUser.enrolledClasses = [];
-      }
-      
-      if (!currentUser.enrolledClasses.includes(classroom.id)) {
-        currentUser.enrolledClasses.push(classroom.id);
-        saveUserProfile(currentUser);
-      }
-    }
-    
+    // In a real app, we would add the user to the classroom here
+    // For now, we'll just return the classroom
     return classroom;
   }
   
@@ -134,21 +95,4 @@ export const deleteClassroom = (classroomId: string): void => {
   const classrooms = getClassrooms();
   const filteredClassrooms = classrooms.filter(c => c.id !== classroomId);
   setLocalStorage(CLASSROOMS_STORAGE_KEY, filteredClassrooms);
-};
-
-// Leave a classroom
-export const leaveClassroom = (classroomId: string): boolean => {
-  const currentUser = getCurrentUser();
-  if (!currentUser || !currentUser.enrolledClasses) {
-    return false;
-  }
-  
-  // Remove the classroom from user's enrolledClasses
-  if (currentUser.enrolledClasses.includes(classroomId)) {
-    currentUser.enrolledClasses = currentUser.enrolledClasses.filter(id => id !== classroomId);
-    saveUserProfile(currentUser);
-    return true;
-  }
-  
-  return false;
 };

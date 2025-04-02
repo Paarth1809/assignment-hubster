@@ -24,10 +24,5 @@ export const getCurrentUser = (): UserProfile | null => {
 
 // Save user profile
 export const saveUserProfile = (profile: UserProfile): void => {
-  // Ensure enrolledClasses is always an array, even if it's undefined
-  if (!profile.enrolledClasses) {
-    profile.enrolledClasses = [];
-  }
-  
   localStorage.setItem(USER_PROFILE_STORAGE_KEY, JSON.stringify(profile));
 };

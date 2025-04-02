@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
 import Index from "./pages/Index";
 import CreateClass from "./pages/CreateClass";
@@ -13,7 +13,6 @@ import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import Settings from "./pages/Settings";
 import Account from "./pages/Account";
-import ProtectedRoute from "./components/ProtectedRoute";
 import { useEffect } from "react";
 
 const queryClient = new QueryClient();
@@ -52,60 +51,14 @@ const App = () => {
           <Sonner />
           <BrowserRouter>
             <Routes>
-              {/* Public Routes */}
+              <Route path="/" element={<Index />} />
+              <Route path="/create-class" element={<CreateClass />} />
+              <Route path="/join-class" element={<JoinClass />} />
+              <Route path="/classroom/:id" element={<ClassroomDetails />} />
               <Route path="/auth" element={<Auth />} />
-              
-              {/* Protected Routes */}
-              <Route 
-                path="/" 
-                element={
-                  <ProtectedRoute>
-                    <Index />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/create-class" 
-                element={
-                  <ProtectedRoute>
-                    <CreateClass />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/join-class" 
-                element={
-                  <ProtectedRoute>
-                    <JoinClass />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/classroom/:id" 
-                element={
-                  <ProtectedRoute>
-                    <ClassroomDetails />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/settings" 
-                element={
-                  <ProtectedRoute>
-                    <Settings />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/account" 
-                element={
-                  <ProtectedRoute>
-                    <Account />
-                  </ProtectedRoute>
-                } 
-              />
-              
-              {/* Catch-all route */}
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/account" element={<Account />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

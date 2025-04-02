@@ -16,7 +16,6 @@ import GradesTab from "@/components/classroom/GradesTab";
 import SettingsTab from "@/components/classroom/SettingsTab";
 import NotFoundContent from "@/components/classroom/NotFoundContent";
 import { useAuth } from "@/context/AuthContext";
-import { useToast } from "@/hooks/use-toast";
 
 const ClassroomDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -24,7 +23,6 @@ const ClassroomDetails = () => {
   const [classroom, setClassroom] = useState(id ? getClassroomById(id) : undefined);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const { profile } = useAuth();
-  const { toast } = useToast();
 
   useEffect(() => {
     if (id) {
@@ -41,20 +39,7 @@ const ClassroomDetails = () => {
     return <NotFoundContent />;
   }
 
-  // Check if user is enrolled in this class
-  const isEnrolled = profile.enrolledClasses?.includes(classroom.id);
-  const isTeacher = profile.role === "teacher";
-  const isClassTeacher = classroom.teacherId === profile.id;
-
-  // If user is not enrolled and not the teacher of this class, redirect to home
-  if (!isEnrolled && !(isTeacher && isClassTeacher)) {
-    toast({
-      title: "Access denied",
-      description: "You are not enrolled in this class",
-      variant: "destructive",
-    });
-    return <Navigate to="/" />;
-  }
+  const isTeacher = profile?.role === "teacher";
 
   return (
     <div className="min-h-screen bg-background">
@@ -77,7 +62,7 @@ const ClassroomDetails = () => {
                 <div className="max-w-7xl mx-auto px-6 py-8">
                   <ClassworkTab 
                     classId={classroom.id} 
-                    isTeacher={isTeacher && isClassTeacher}
+                    isTeacher={isTeacher}
                   />
                 </div>
               </TabsContent>
@@ -95,7 +80,7 @@ const ClassroomDetails = () => {
                 <div className="max-w-7xl mx-auto px-6 py-8">
                   <ClassworkTab 
                     classId={classroom.id} 
-                    isTeacher={isTeacher && isClassTeacher} 
+                    isTeacher={isTeacher} 
                   />
                 </div>
               </TabsContent>

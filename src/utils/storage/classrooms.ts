@@ -1,7 +1,7 @@
 
 import { Classroom, UserProfile } from "../types";
 import { getLocalStorage, setLocalStorage } from "./base";
-import { getCurrentUser } from "./users";
+import { getCurrentUser, saveUserProfile } from "./users";
 
 // Classrooms
 const CLASSROOMS_STORAGE_KEY = 'classrooms';
@@ -71,8 +71,25 @@ export const joinClassroom = (code: string, userId: string): Classroom | null =>
   const classroom = classrooms.find(c => c.enrollmentCode === code);
   
   if (classroom) {
-    // In a real app, we would add the user to the classroom here
-    // For now, we'll just return the classroom
+    // Get the current user profile
+    const user = getCurrentUser();
+    
+    if (user) {
+      // Make sure enrolledClasses is initialized
+      if (!user.enrolledClasses) {
+        user.enrolledClasses = [];
+      }
+      
+      // Check if the user is already enrolled in this class
+      if (!user.enrolledClasses.includes(classroom.id)) {
+        // Add classroom to user's enrolled classes
+        user.enrolledClasses.push(classroom.id);
+        
+        // Save updated user profile
+        saveUserProfile(user);
+      }
+    }
+    
     return classroom;
   }
   
@@ -95,4 +112,17 @@ export const deleteClassroom = (classroomId: string): void => {
   const classrooms = getClassrooms();
   const filteredClassrooms = classrooms.filter(c => c.id !== classroomId);
   setLocalStorage(CLASSROOMS_STORAGE_KEY, filteredClassrooms);
+};
+
+// Leave a classroom
+export const leaveClassroom = (classroomId: string): void => {
+  const user = getCurrentUser();
+  
+  if (user && user.enrolledClasses) {
+    // Remove the classroom from the user's enrolled classes
+    user.enrolledClasses = user.enrolledClasses.filter(id => id !== classroomId);
+    
+    // Save updated user profile
+    saveUserProfile(user);
+  }
 };

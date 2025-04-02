@@ -9,10 +9,12 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, LogIn } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { useAuth } from "@/context/AuthContext";
 
 const JoinClass = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, profile } = useAuth();
   const [code, setCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -30,10 +32,20 @@ const JoinClass = () => {
       return;
     }
 
+    if (!user || !profile) {
+      toast({
+        title: "Authentication required",
+        description: "You need to be logged in to join a class",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
     // Simulate delay
     setTimeout(() => {
       try {
-        const result = joinClassroom(code.toUpperCase(), "user1");
+        const result = joinClassroom(code.toUpperCase(), user.id);
         
         if (result) {
           toast({

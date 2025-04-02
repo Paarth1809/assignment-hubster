@@ -1,6 +1,6 @@
 
-import { useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -16,7 +16,12 @@ export default function Auth() {
   const { signIn, signUp, user, isLoading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<string>('login');
+  const location = useLocation();
+  
+  // Get the tab from URL query params (e.g., /auth?tab=register)
+  const queryParams = new URLSearchParams(location.search);
+  const tabParam = queryParams.get('tab');
+  const [activeTab, setActiveTab] = useState<string>(tabParam === 'register' ? 'register' : 'login');
   
   // Login form state
   const [email, setEmail] = useState('');
@@ -31,9 +36,12 @@ export default function Auth() {
   const [role, setRole] = useState<'student' | 'teacher'>('student');
   const [isRegistering, setIsRegistering] = useState(false);
 
+  // Get the intended destination from location state
+  const from = (location.state as any)?.from?.pathname || '/';
+
   // Redirect if already logged in
   if (user && !isLoading) {
-    return <Navigate to="/" />;
+    return <Navigate to={from} replace />;
   }
 
   const handleLogin = async (e: React.FormEvent) => {

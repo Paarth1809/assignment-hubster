@@ -1,5 +1,5 @@
 
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Settings, LogOut, User } from 'lucide-react';
 import { UserProfile } from '@/utils/types';
+import { useToast } from '@/hooks/use-toast';
 
 interface UserMenuProps {
   profile: UserProfile;
@@ -19,6 +20,9 @@ interface UserMenuProps {
 }
 
 const UserMenu = ({ profile, signOut, isMobile }: UserMenuProps) => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  
   // Get initials for avatar fallback
   const getInitials = (name: string) => {
     return name
@@ -27,6 +31,24 @@ const UserMenu = ({ profile, signOut, isMobile }: UserMenuProps) => {
       .join('')
       .toUpperCase()
       .substring(0, 2);
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Logged out successfully",
+        description: "You have been logged out of your account.",
+      });
+      navigate('/auth');
+    } catch (error) {
+      console.error('Error signing out:', error);
+      toast({
+        title: "Error signing out",
+        description: "There was a problem signing you out.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -66,7 +88,7 @@ const UserMenu = ({ profile, signOut, isMobile }: UserMenuProps) => {
           <DropdownMenuSeparator />
           <DropdownMenuItem 
             className="text-destructive focus:text-destructive"
-            onClick={() => signOut()}
+            onClick={handleSignOut}
           >
             <LogOut className="mr-2 h-4 w-4" />
             <span>Log out</span>

@@ -1,5 +1,5 @@
 
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/sheet';
 import { Menu, User, Settings, LogOut } from 'lucide-react';
 import { UserProfile } from '@/utils/types';
+import { useToast } from '@/hooks/use-toast';
 
 interface MobileMenuProps {
   profile: UserProfile | null;
@@ -16,6 +17,27 @@ interface MobileMenuProps {
 }
 
 const MobileMenu = ({ profile, isTeacher, signOut }: MobileMenuProps) => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Logged out successfully",
+        description: "You have been logged out of your account.",
+      });
+      navigate('/auth');
+    } catch (error) {
+      console.error('Error signing out:', error);
+      toast({
+        title: "Error signing out",
+        description: "There was a problem signing you out.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -72,7 +94,7 @@ const MobileMenu = ({ profile, isTeacher, signOut }: MobileMenuProps) => {
                 <Button 
                   variant="destructive" 
                   className="w-full justify-start"
-                  onClick={() => signOut()}
+                  onClick={handleSignOut}
                 >
                   <LogOut className="mr-2 h-4 w-4" />
                   Log out

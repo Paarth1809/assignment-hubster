@@ -14,6 +14,7 @@ import Auth from "./pages/Auth";
 import Settings from "./pages/Settings";
 import Account from "./pages/Account";
 import { useEffect } from "react";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -51,14 +52,42 @@ const App = () => {
           <Sonner />
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/create-class" element={<CreateClass />} />
-              <Route path="/join-class" element={<JoinClass />} />
-              <Route path="/classroom/:id" element={<ClassroomDetails />} />
+              {/* Public Routes */}
               <Route path="/auth" element={<Auth />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/account" element={<Account />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              
+              {/* Protected Routes */}
+              <Route path="/" element={
+                <ProtectedRoute>
+                  <Index />
+                </ProtectedRoute>
+              } />
+              <Route path="/create-class" element={
+                <ProtectedRoute>
+                  <CreateClass />
+                </ProtectedRoute>
+              } />
+              <Route path="/join-class" element={
+                <ProtectedRoute>
+                  <JoinClass />
+                </ProtectedRoute>
+              } />
+              <Route path="/classroom/:id" element={
+                <ProtectedRoute>
+                  <ClassroomDetails />
+                </ProtectedRoute>
+              } />
+              <Route path="/settings" element={
+                <ProtectedRoute>
+                  <Settings />
+                </ProtectedRoute>
+              } />
+              <Route path="/account" element={
+                <ProtectedRoute>
+                  <Account />
+                </ProtectedRoute>
+              } />
+              
+              {/* Catch-all Route */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

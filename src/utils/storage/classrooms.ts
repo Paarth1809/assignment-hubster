@@ -65,10 +65,12 @@ export const getUserClassrooms = (): Classroom[] => {
   return allClassrooms.filter(classroom => user.enrolledClasses.includes(classroom.id));
 };
 
-// Join a classroom
+// Join a classroom by code
 export const joinClassroom = (code: string, userId: string): Classroom | null => {
   const classrooms = getClassrooms();
-  const classroom = classrooms.find(c => c.enrollmentCode === code);
+  // Normalize the code to uppercase for consistent matching
+  const normalizedCode = code.toUpperCase().trim();
+  const classroom = classrooms.find(c => c.enrollmentCode === normalizedCode);
   
   if (classroom) {
     // Get the current user profile
@@ -87,13 +89,26 @@ export const joinClassroom = (code: string, userId: string): Classroom | null =>
         
         // Save updated user profile
         saveUserProfile(user);
+        
+        console.log(`User ${userId} joined classroom ${classroom.id}`);
+      } else {
+        console.log(`User ${userId} is already enrolled in classroom ${classroom.id}`);
       }
+    } else {
+      console.error("Cannot join classroom: No user profile found");
     }
     
     return classroom;
   }
   
+  console.error(`No classroom found with enrollment code: ${normalizedCode}`);
   return null;
+};
+
+// Find a classroom by enrollment code
+export const getClassroomByCode = (code: string): Classroom | undefined => {
+  const classrooms = getClassrooms();
+  return classrooms.find(classroom => classroom.enrollmentCode === code.toUpperCase().trim());
 };
 
 // Update a classroom

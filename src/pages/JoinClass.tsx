@@ -1,12 +1,12 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { joinClassroom } from "@/utils/storage";
+import { joinClassroom, getClassroomByCode } from "@/utils/storage";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, LogIn } from "lucide-react";
+import { ArrowLeft, LogIn, CheckCircle } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/context/AuthContext";
@@ -17,6 +17,24 @@ const JoinClass = () => {
   const { user, profile } = useAuth();
   const [code, setCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [foundClassDetails, setFoundClassDetails] = useState<{name: string, section?: string} | null>(null);
+
+  // Check if code exists as user types
+  useEffect(() => {
+    if (code.length >= 6) {
+      const classroom = getClassroomByCode(code);
+      if (classroom) {
+        setFoundClassDetails({
+          name: classroom.name,
+          section: classroom.section
+        });
+      } else {
+        setFoundClassDetails(null);
+      }
+    } else {
+      setFoundClassDetails(null);
+    }
+  }, [code]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,6 +130,19 @@ const JoinClass = () => {
                   Ask your teacher for the class code, then enter it here.
                 </p>
               </div>
+
+              {foundClassDetails && (
+                <div className="bg-muted p-4 rounded-md flex items-start gap-3 animate-in fade-in duration-300">
+                  <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                  <div>
+                    <p className="font-medium">{foundClassDetails.name}</p>
+                    {foundClassDetails.section && (
+                      <p className="text-sm text-muted-foreground">Section: {foundClassDetails.section}</p>
+                    )}
+                    <p className="text-sm text-green-500 font-medium mt-1">Class found! Click Join to enroll.</p>
+                  </div>
+                </div>
+              )}
 
               <div className="pt-4">
                 <Button

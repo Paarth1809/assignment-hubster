@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import { joinClassroom, getClassroomByCode } from "@/utils/storage";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,11 @@ const JoinClass = () => {
   const [foundClassDetails, setFoundClassDetails] = useState<{name: string, section?: string} | null>(null);
   const [isChecking, setIsChecking] = useState(false);
 
+  // Redirect if not logged in
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+  
   // Check if code exists as user types
   useEffect(() => {
     const checkClassCode = async () => {
@@ -64,7 +69,7 @@ const JoinClass = () => {
       return;
     }
 
-    if (!user || !profile) {
+    if (!user) {
       toast({
         title: "Authentication required",
         description: "You need to be logged in to join a class",

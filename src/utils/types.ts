@@ -43,6 +43,7 @@ export interface Classroom {
   coverImage?: string;
   enrollmentCode: string;
   liveClasses?: LiveClass[];
+  teacherId?: string; // Added to support database storage
 }
 
 export interface UserProfile {

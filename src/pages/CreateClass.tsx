@@ -4,9 +4,21 @@ import Footer from "@/components/Footer";
 import CreateClassForm from "@/components/classroom/CreateClassForm";
 import PageHeader from "@/components/classroom/PageHeader";
 import { useAuth } from "@/context/AuthContext";
+import { Navigate } from "react-router-dom";
 
 const CreateClass = () => {
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
+
+  // Redirect if not logged in
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  // Only teachers can create classes
+  const isTeacher = profile?.role === 'teacher';
+  if (!isTeacher) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <div className="min-h-screen bg-background">

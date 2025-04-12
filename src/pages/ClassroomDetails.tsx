@@ -1,109 +1,82 @@
 
-import { useState, useEffect } from "react";
-import { useParams, Navigate } from "react-router-dom";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { getClassroomById, getAssignmentsForClass } from "@/utils/storage";
-import { Assignment } from "@/utils/types";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { getClassroomById } from "@/utils/storage";
+import { useToast } from "@/hooks/use-toast";
 import ClassHeader from "@/components/classroom/ClassHeader";
 import ClassTabs from "@/components/classroom/ClassTabs";
-import StreamTab from "@/components/classroom/StreamTab";
-import ClassworkTab from "@/components/classroom/ClassworkTab";
-import LiveTab from "@/components/classroom/LiveTab";
-import PeopleTab from "@/components/classroom/PeopleTab";
-import GradesTab from "@/components/classroom/GradesTab";
-import SettingsTab from "@/components/classroom/SettingsTab";
 import NotFoundContent from "@/components/classroom/NotFoundContent";
-import { useAuth } from "@/context/AuthContext";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import { Classroom } from "@/utils/types";
 
 const ClassroomDetails = () => {
   const { id } = useParams<{ id: string }>();
-  const [activeTab, setActiveTab] = useState("dashboard");
-  const [classroom, setClassroom] = useState(id ? getClassroomById(id) : undefined);
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const { profile } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [classroom, setClassroom] = useState<Classroom | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (id) {
-      setClassroom(getClassroomById(id));
-      setAssignments(getAssignmentsForClass(id));
-    }
-  }, [id]);
+    const fetchClassroom = async () => {
+      if (!id) {
+        setError("Class ID is missing");
+        setLoading(false);
+        return;
+      }
 
-  if (!profile) {
-    return <Navigate to="/auth" />;
+      try {
+        // Properly await the Promise from getClassroomById
+        const classroomData = await getClassroomById(id);
+        if (!classroomData) {
+          setError("Class not found");
+        } else {
+          setClassroom(classroomData);
+        }
+      } catch (err) {
+        console.error("Error fetching classroom:", err);
+        setError("Failed to load classroom data");
+        toast({
+          title: "Error",
+          description: "Failed to load classroom data",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchClassroom();
+  }, [id, toast]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin h-12 w-12 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
   }
 
-  if (!classroom) {
-    return <NotFoundContent />;
+  if (error || !classroom) {
+    return (
+      <div className="min-h-screen">
+        <Navbar />
+        <main className="container mx-auto py-20 px-6">
+          <NotFoundContent message={error || "Class not found"} />
+        </main>
+        <Footer />
+      </div>
+    );
   }
-
-  const isTeacher = profile?.role === "teacher";
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="pt-20 pb-20">
+      <main>
         <ClassHeader classroom={classroom} />
-
-        <div className="border-b sticky top-16 bg-background z-10">
-          <div className="max-w-7xl mx-auto px-6">
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <ClassTabs activeTab={activeTab} onTabChange={setActiveTab} />
-              
-              <TabsContent value="dashboard">
-                <div className="max-w-7xl mx-auto px-6 py-8">
-                  <StreamTab classroom={classroom} assignments={assignments} />
-                </div>
-              </TabsContent>
-
-              <TabsContent value="assignments">
-                <div className="max-w-7xl mx-auto px-6 py-8">
-                  <ClassworkTab 
-                    classId={classroom.id} 
-                    isTeacher={isTeacher}
-                  />
-                </div>
-              </TabsContent>
-
-              <TabsContent value="live">
-                <div className="max-w-7xl mx-auto px-6 py-8">
-                  <LiveTab 
-                    classId={classroom.id}
-                    currentUser={profile}
-                  />
-                </div>
-              </TabsContent>
-
-              <TabsContent value="submissions">
-                <div className="max-w-7xl mx-auto px-6 py-8">
-                  <ClassworkTab 
-                    classId={classroom.id} 
-                    isTeacher={isTeacher} 
-                  />
-                </div>
-              </TabsContent>
-
-              <TabsContent value="people">
-                <div className="max-w-7xl mx-auto px-6 py-8">
-                  <PeopleTab classroom={classroom} currentUser={profile} />
-                </div>
-              </TabsContent>
-
-              <TabsContent value="grades">
-                <div className="max-w-7xl mx-auto px-6 py-8">
-                  <GradesTab assignments={assignments} />
-                </div>
-              </TabsContent>
-
-              <TabsContent value="settings">
-                <div className="max-w-7xl mx-auto px-6 py-8">
-                  <SettingsTab classroom={classroom} currentUser={profile} />
-                </div>
-              </TabsContent>
-            </Tabs>
-          </div>
+        <div className="container mx-auto px-4 pb-16">
+          <ClassTabs classroom={classroom} />
         </div>
       </main>
       <Footer />

@@ -7,11 +7,11 @@ import { supabase } from "@/integrations/supabase/client";
 const CLASSROOMS_STORAGE_KEY = 'classrooms';
 
 // Initialize classrooms
-export const initializeClassrooms = (): Classroom[] => {
+export const initializeClassrooms = async (): Promise<Classroom[]> => {
   if (!localStorage.getItem(CLASSROOMS_STORAGE_KEY)) {
     localStorage.setItem(CLASSROOMS_STORAGE_KEY, JSON.stringify([]));
   }
-  return getClassrooms();
+  return await getClassrooms();
 };
 
 // Get all classrooms

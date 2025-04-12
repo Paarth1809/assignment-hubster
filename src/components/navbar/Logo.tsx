@@ -27,7 +27,7 @@ const Logo = () => {
           <path d="M8 9h1" />
         </svg>
       </div>
-      <span className="text-xl font-medium">AssignHub</span>
+      <span className="text-xl font-medium">Eduportal</span>
     </Link>
   );
 };

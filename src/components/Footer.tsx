@@ -1,4 +1,3 @@
-
 import { cn } from '@/lib/utils';
 
 const Footer = () => {
@@ -28,7 +27,7 @@ const Footer = () => {
                   <path d="M8 9h1" />
                 </svg>
               </div>
-              <span className="text-xl font-medium">AssignHub</span>
+              <span className="text-xl font-medium">Eduportal</span>
             </a>
             <p className="text-muted-foreground mb-4 max-w-md">
               Streamline your assignment submissions with our intuitive platform. Easy uploads, clear feedback, and organized tracking.
@@ -164,7 +163,7 @@ const Footer = () => {
         
         <div className="mt-12 pt-8 border-t border-border">
           <p className="text-sm text-muted-foreground text-center">
-            &copy; {new Date().getFullYear()} AssignHub. All rights reserved.
+            &copy; {new Date().getFullYear()} Eduportal. All rights reserved.
           </p>
         </div>
       </div>

@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/Navbar';
@@ -8,10 +8,35 @@ import ProfileCard from '@/components/account/ProfileCard';
 import StatsCard from '@/components/account/StatsCard';
 import ContentTabs from '@/components/account/ContentTabs';
 import { getUserClassrooms, getUpcomingLiveClasses } from '@/utils/account';
+import { Classroom, LiveClass } from '@/utils/types';
 
 export default function Account() {
   const { profile, signOut, updateProfile } = useAuth();
   const navigate = useNavigate();
+  const [classrooms, setClassrooms] = useState<Classroom[]>([]);
+  const [upcomingLiveClasses, setUpcomingLiveClasses] = useState<LiveClass[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Fetch data on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      if (profile) {
+        try {
+          const userClassrooms = await getUserClassrooms();
+          const liveClasses = await getUpcomingLiveClasses(userClassrooms);
+          
+          setClassrooms(userClassrooms);
+          setUpcomingLiveClasses(liveClasses);
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+    
+    fetchData();
+  }, [profile]);
   
   const handleLogout = async () => {
     await signOut();
@@ -34,9 +59,6 @@ export default function Account() {
       </div>
     );
   }
-
-  const classrooms = getUserClassrooms();
-  const upcomingLiveClasses = getUpcomingLiveClasses(classrooms);
 
   return (
     <div className="min-h-screen bg-background">

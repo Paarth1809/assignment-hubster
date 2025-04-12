@@ -1,5 +1,5 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { PlusIcon, BookOpenCheck } from "lucide-react";
@@ -10,11 +10,28 @@ import { containerVariants, itemVariants } from "@/utils/animations";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/context/AuthContext";
+import { Classroom } from "@/utils/types";
 
 const Index = () => {
   const { profile } = useAuth();
+  const [classrooms, setClassrooms] = useState<Classroom[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Fetch classrooms
+    const fetchClassrooms = async () => {
+      try {
+        const fetchedClassrooms = await getClassrooms();
+        setClassrooms(fetchedClassrooms);
+      } catch (error) {
+        console.error("Error fetching classrooms:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchClassrooms();
+    
     // Smooth scroll behavior for navigation
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
       anchor.addEventListener('click', function (e) {
@@ -40,16 +57,6 @@ const Index = () => {
     };
   }, []);
 
-  // Get all classrooms
-  const allClassrooms = getClassrooms();
-  
-  // Filter classrooms based on role
-  const userClassrooms = profile?.role === 'student' 
-    ? (profile.enrolledClasses?.length ? 
-        allClassrooms.filter(c => profile.enrolledClasses.includes(c.id)) : 
-        [])
-    : allClassrooms; // Teachers see all classrooms
-  
   const isTeacher = profile?.role === 'teacher';
 
   return (
@@ -82,7 +89,11 @@ const Index = () => {
               </div>
             </div>
             
-            {userClassrooms.length === 0 ? (
+            {loading ? (
+              <div className="flex justify-center py-16">
+                <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+              </div>
+            ) : classrooms.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
                 <BookOpenCheck size={64} className="text-muted-foreground mb-4" />
                 <h2 className="text-2xl font-medium mb-2">No classes yet</h2>
@@ -110,7 +121,7 @@ const Index = () => {
                 initial="hidden"
                 animate="visible"
               >
-                {userClassrooms.map((classroom) => (
+                {classrooms.map((classroom) => (
                   <motion.div key={classroom.id} variants={itemVariants}>
                     <ClassroomCard classroom={classroom} />
                   </motion.div>

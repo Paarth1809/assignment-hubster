@@ -18,25 +18,39 @@ const JoinClass = () => {
   const [code, setCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [foundClassDetails, setFoundClassDetails] = useState<{name: string, section?: string} | null>(null);
+  const [isChecking, setIsChecking] = useState(false);
 
   // Check if code exists as user types
   useEffect(() => {
-    if (code.length >= 6) {
-      const classroom = getClassroomByCode(code);
-      if (classroom) {
-        setFoundClassDetails({
-          name: classroom.name,
-          section: classroom.section
-        });
+    const checkClassCode = async () => {
+      if (code.length >= 6) {
+        setIsChecking(true);
+        try {
+          const classroom = await getClassroomByCode(code);
+          if (classroom) {
+            setFoundClassDetails({
+              name: classroom.name,
+              section: classroom.section
+            });
+          } else {
+            setFoundClassDetails(null);
+          }
+        } catch (error) {
+          console.error("Error checking class code:", error);
+          setFoundClassDetails(null);
+        } finally {
+          setIsChecking(false);
+        }
       } else {
         setFoundClassDetails(null);
       }
-    } else {
-      setFoundClassDetails(null);
-    }
+    };
+    
+    const timeoutId = setTimeout(checkClassCode, 500);
+    return () => clearTimeout(timeoutId);
   }, [code]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
@@ -60,35 +74,32 @@ const JoinClass = () => {
       return;
     }
 
-    // Simulate delay
-    setTimeout(() => {
-      try {
-        const result = joinClassroom(code.toUpperCase(), user.id);
-        
-        if (result) {
-          toast({
-            title: "Joined Class",
-            description: `You have successfully joined ${result.name}.`,
-          });
-          navigate(`/classroom/${result.id}`);
-        } else {
-          toast({
-            title: "Invalid Class Code",
-            description: "No class found with this code. Please check and try again.",
-            variant: "destructive",
-          });
-        }
-      } catch (error) {
-        console.error("Error joining class:", error);
+    try {
+      const result = await joinClassroom(code.toUpperCase(), user.id);
+      
+      if (result) {
         toast({
-          title: "Join Failed",
-          description: "There was an error joining the class. Please try again.",
+          title: "Joined Class",
+          description: `You have successfully joined ${result.name}.`,
+        });
+        navigate(`/classroom/${result.id}`);
+      } else {
+        toast({
+          title: "Invalid Class Code",
+          description: "No class found with this code. Please check and try again.",
           variant: "destructive",
         });
-      } finally {
-        setIsSubmitting(false);
       }
-    }, 800);
+    } catch (error) {
+      console.error("Error joining class:", error);
+      toast({
+        title: "Join Failed",
+        description: "There was an error joining the class. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -131,7 +142,13 @@ const JoinClass = () => {
                 </p>
               </div>
 
-              {foundClassDetails && (
+              {isChecking && (
+                <div className="flex justify-center">
+                  <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full"></div>
+                </div>
+              )}
+
+              {foundClassDetails && !isChecking && (
                 <div className="bg-muted p-4 rounded-md flex items-start gap-3 animate-in fade-in duration-300">
                   <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
                   <div>

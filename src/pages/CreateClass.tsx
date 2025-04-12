@@ -10,17 +10,19 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, Save } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { useAuth } from "@/context/AuthContext";
 
 const CreateClass = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { profile } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     section: "",
     subject: "",
     description: "",
-    teacherName: "Demo Teacher",
+    teacherName: profile?.name || "Teacher",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -28,7 +30,7 @@ const CreateClass = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
@@ -42,26 +44,23 @@ const CreateClass = () => {
       return;
     }
 
-    // Simulate delay
-    setTimeout(() => {
-      try {
-        const newClassroom = saveClassroom(formData);
-        toast({
-          title: "Class Created",
-          description: "Your new class has been created successfully.",
-        });
-        navigate(`/classroom/${newClassroom.id}`);
-      } catch (error) {
-        console.error("Error creating class:", error);
-        toast({
-          title: "Creation Failed",
-          description: "There was an error creating your class. Please try again.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsSubmitting(false);
-      }
-    }, 800);
+    try {
+      const newClassroom = await saveClassroom(formData);
+      toast({
+        title: "Class Created",
+        description: "Your new class has been created successfully.",
+      });
+      navigate(`/classroom/${newClassroom.id}`);
+    } catch (error) {
+      console.error("Error creating class:", error);
+      toast({
+        title: "Creation Failed",
+        description: "There was an error creating your class. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

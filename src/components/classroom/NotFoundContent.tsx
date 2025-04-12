@@ -1,29 +1,21 @@
 
-import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import { useNavigate } from "react-router-dom";
 
-const NotFoundContent = () => {
+interface NotFoundContentProps {
+  message: string;
+}
+
+const NotFoundContent = ({ message }: NotFoundContentProps) => {
+  const navigate = useNavigate();
+  
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      <main className="py-20 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-2xl font-bold mb-4">Classroom not found</h1>
-          <p className="text-muted-foreground mb-8">
-            The classroom you're looking for doesn't exist or has been deleted.
-          </p>
-          <Link to="/">
-            <Button>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Return to Dashboard
-            </Button>
-          </Link>
-        </div>
-      </main>
-      <Footer />
+    <div className="text-center py-16">
+      <h2 className="text-2xl font-bold mb-4">Not Found</h2>
+      <p className="text-muted-foreground mb-8">{message}</p>
+      <Button onClick={() => navigate('/')}>
+        Return to Dashboard
+      </Button>
     </div>
   );
 };

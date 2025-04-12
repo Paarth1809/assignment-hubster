@@ -1,14 +1,16 @@
 
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookOpen, Users, FileText, MessageSquare, Settings, Video, LayoutDashboard, Upload } from "lucide-react";
+import { Classroom } from "@/utils/types";
 
 interface ClassTabsProps {
   activeTab: string;
   onTabChange: (value: string) => void;
+  classroom: Classroom;
   children?: React.ReactNode;
 }
 
-const ClassTabs = ({ activeTab, onTabChange }: ClassTabsProps) => {
+const ClassTabs = ({ activeTab, onTabChange, classroom }: ClassTabsProps) => {
   return (
     <TabsList className="grid w-full max-w-4xl grid-cols-7">
       <TabsTrigger value="dashboard" className="gap-2">

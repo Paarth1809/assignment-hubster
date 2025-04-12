@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getClassroomById } from "@/utils/storage";
@@ -9,6 +8,8 @@ import NotFoundContent from "@/components/classroom/NotFoundContent";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Classroom } from "@/utils/types";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import StreamTab from "@/components/classroom/StreamTab";
 
 const ClassroomDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -17,6 +18,7 @@ const ClassroomDetails = () => {
   const [classroom, setClassroom] = useState<Classroom | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("dashboard");
 
   useEffect(() => {
     const fetchClassroom = async () => {
@@ -70,13 +72,27 @@ const ClassroomDetails = () => {
     );
   }
 
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       <main>
         <ClassHeader classroom={classroom} />
         <div className="container mx-auto px-4 pb-16">
-          <ClassTabs classroom={classroom} />
+          <Tabs value={activeTab} onValueChange={handleTabChange}>
+            <ClassTabs 
+              activeTab={activeTab} 
+              onTabChange={handleTabChange}
+              classroom={classroom} 
+            />
+            <TabsContent value="dashboard">
+              <StreamTab classroom={classroom} assignments={[]} />
+            </TabsContent>
+            {/* Other tab contents would go here */}
+          </Tabs>
         </div>
       </main>
       <Footer />

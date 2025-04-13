@@ -19,7 +19,8 @@ import {
   Radar,
   ScatterChart,
   Scatter,
-  ZAxis
+  ZAxis,
+  TooltipProps
 } from 'recharts';
 
 interface ClassroomPerformanceChartProps {
@@ -101,6 +102,14 @@ export default function ClassroomPerformanceChart({ classroomId }: ClassroomPerf
     name: student.studentName
   }));
   
+  // Format value for tooltip to safely handle different types
+  const formatValue = (value: any): string => {
+    if (typeof value === 'number') {
+      return `${value.toFixed(2)}%`;
+    }
+    return `${value}`;
+  };
+  
   if (loading) {
     return (
       <Card>
@@ -161,9 +170,8 @@ export default function ClassroomPerformanceChart({ classroomId }: ClassroomPerf
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="studentName" angle={-45} textAnchor="end" height={70} />
                 <YAxis domain={[0, 100]} label={{ value: 'Average Grade (%)', angle: -90, position: 'insideLeft' }} />
-                <Tooltip formatter={(value) => [`${value.toFixed(2)}%`, 'Average Grade']} />
+                <Tooltip formatter={(value) => [formatValue(value), 'Average Grade']} />
                 <Bar dataKey="averageGrade" fill="#82ca9d" name="Average Grade (%)" />
-                {/* Add reference line for class average */}
                 <Legend />
               </BarChart>
             </ResponsiveContainer>
@@ -176,7 +184,7 @@ export default function ClassroomPerformanceChart({ classroomId }: ClassroomPerf
                 <PolarAngleAxis dataKey="subject" />
                 <PolarRadiusAxis angle={30} domain={[0, 100]} />
                 <Radar name="Class Average" dataKey="A" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
-                <Tooltip formatter={(value) => [`${value.toFixed(2)}%`, 'Average Score']} />
+                <Tooltip formatter={(value) => [formatValue(value), 'Average Score']} />
                 <Legend />
               </RadarChart>
             </ResponsiveContainer>
@@ -192,7 +200,7 @@ export default function ClassroomPerformanceChart({ classroomId }: ClassroomPerf
                 <YAxis type="number" dataKey="y" name="Grade" domain={[0, 100]} />
                 <ZAxis type="number" dataKey="z" range={[60, 400]} />
                 <Tooltip cursor={{ strokeDasharray: '3 3' }} formatter={(value, name, props) => {
-                  if (name === 'y') return [`${value.toFixed(2)}%`, 'Grade'];
+                  if (name === 'y') return [formatValue(value), 'Grade'];
                   if (name === 'x') return [props.payload.name, 'Student'];
                   return [value, name];
                 }} />

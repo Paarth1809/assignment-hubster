@@ -8,17 +8,22 @@ import { useState } from "react";
 import { getAssignmentsForClass } from "@/utils/storage";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
 
 interface ClassworkTabProps {
-  classId: string;
-  isTeacher?: boolean;
+  classroom?: { id: string; teacherId?: string };
+  assignments?: Assignment[];
 }
 
-const ClassworkTab = ({ classId, isTeacher = false }: ClassworkTabProps) => {
+const ClassworkTab = ({ classroom, assignments = [] }: ClassworkTabProps) => {
   const { toast } = useToast();
+  const { profile } = useAuth();
   const [showUploadForm, setShowUploadForm] = useState(false);
-  const [assignments, setAssignments] = useState<Assignment[]>(getAssignmentsForClass(classId));
+  const [currentAssignments, setCurrentAssignments] = useState<Assignment[]>(assignments);
   const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(null);
+  
+  const classId = classroom?.id || '';
+  const isTeacher = profile?.id === classroom?.teacherId;
 
   const handleCreateAssignment = () => {
     setEditingAssignment(null);
@@ -85,7 +90,7 @@ const ClassworkTab = ({ classId, isTeacher = false }: ClassworkTabProps) => {
             onSuccess={() => {
               setShowUploadForm(false);
               setEditingAssignment(null);
-              setAssignments(getAssignmentsForClass(classId));
+              setCurrentAssignments(getAssignmentsForClass(classId));
               toast({
                 title: editingAssignment ? "Assignment Updated" : "Assignment Created",
                 description: editingAssignment 
@@ -100,7 +105,7 @@ const ClassworkTab = ({ classId, isTeacher = false }: ClassworkTabProps) => {
       
       <AssignmentList 
         classId={classId} 
-        onAssignmentUpdate={() => setAssignments(getAssignmentsForClass(classId))}
+        onAssignmentUpdate={() => setCurrentAssignments(getAssignmentsForClass(classId))}
         isTeacher={isTeacher}
         onEditAssignment={isTeacher ? handleEditAssignment : undefined}
       />

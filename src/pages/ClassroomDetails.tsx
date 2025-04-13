@@ -1,10 +1,11 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { getClassroomById } from '@/utils/storage';
 import { getAssignments } from '@/utils/storage/assignments';
 import { getLiveClasses } from '@/utils/storage/liveClasses';
-import { Announcement, Assignment, Classroom, LiveClass } from '@/utils/types';
+import { Assignment, Classroom, LiveClass, Announcement } from '@/utils/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +19,7 @@ import GradesTab from '@/components/classroom/GradesTab';
 import LiveTab from '@/components/classroom/LiveTab';
 import PeopleTab from '@/components/classroom/PeopleTab';
 import SettingsTab from '@/components/classroom/SettingsTab';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 
 const ClassroomDetails = () => {
   const { id } = useParams();
@@ -121,17 +123,39 @@ const ClassroomDetails = () => {
           </Card>
 
           {classroom && (
-            <ClassTabs>
-              <StreamTab announcements={announcements} />
-              <ClassworkTab assignments={assignments} />
-              <GradesTab 
-                assignments={assignments} 
-                classroomId={classroom.id}
-                teacherId={classroom.teacherId}
-              />
-              <LiveTab liveClasses={liveClasses} classroom={classroom} />
-              <PeopleTab classroom={classroom} />
-              {isTeacher && <SettingsTab classroom={classroom} />}
+            <ClassTabs classroom={classroom}>
+              <TabsContent value="stream">
+                <StreamTab classroom={classroom} assignments={assignments} announcements={announcements} />
+              </TabsContent>
+              <TabsContent value="classwork">
+                <ClassworkTab classroom={classroom} assignments={assignments} />
+              </TabsContent>
+              <TabsContent value="grades">
+                <GradesTab 
+                  assignments={assignments} 
+                  classroomId={classroom.id}
+                  teacherId={classroom.teacherId}
+                />
+              </TabsContent>
+              <TabsContent value="live">
+                <LiveTab classroom={classroom} />
+              </TabsContent>
+              <TabsContent value="people">
+                <PeopleTab classroom={classroom} />
+              </TabsContent>
+              {isTeacher && (
+                <TabsContent value="settings">
+                  <SettingsTab classroom={classroom} />
+                </TabsContent>
+              )}
+              <TabsContent value="dashboard">
+                <div className="space-y-4">
+                  <h2 className="text-xl font-medium">Dashboard</h2>
+                  <p className="text-muted-foreground">
+                    Welcome to the classroom dashboard. Here you'll find an overview of your progress and activities.
+                  </p>
+                </div>
+              </TabsContent>
             </ClassTabs>
           )}
         </div>

@@ -59,7 +59,7 @@ export default function Settings() {
             />
             
             <div className="flex-1">
-              <Tabs value={activeTab} className="w-full">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsContent value="profile" className="mt-0">
                   <ProfileTab profile={profile} updateProfile={updateProfile} />
                 </TabsContent>

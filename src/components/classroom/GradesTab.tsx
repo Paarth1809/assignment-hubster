@@ -161,7 +161,7 @@ const GradesTab = ({ assignments, classroomId, teacherId }: GradesTabProps) => {
         )}
       </div>
       
-      <Tabs defaultValue="grades" value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-6">
           <TabsTrigger value="grades">
             <FileText className="h-4 w-4 mr-2" />

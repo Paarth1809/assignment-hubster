@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -7,30 +6,31 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { AlertCircle, Calendar, Clock, Link, Play, Plus, Video, X } from "lucide-react";
-import { LiveClass, UserProfile } from "@/utils/types";
-import { createLiveClass, getLiveClassesForClassroom, updateLiveClass, deleteLiveClass } from "@/utils/storage";
+import { LiveClass, Classroom } from "@/utils/types";
+import { createLiveClass, getLiveClassesForClassroom, updateLiveClass, deleteLiveClass } from "@/utils/storage/liveClasses";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/utils/assignmentUtils";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useAuth } from "@/context/AuthContext";
 
 interface LiveTabProps {
-  classId: string;
-  currentUser: UserProfile;
+  classroom: Classroom;
 }
 
-const LiveTab = ({ classId, currentUser }: LiveTabProps) => {
+const LiveTab = ({ classroom }: LiveTabProps) => {
+  const { profile } = useAuth();
   const { toast } = useToast();
-  const [liveClasses, setLiveClasses] = useState<LiveClass[]>(getLiveClassesForClassroom(classId));
+  const [liveClasses, setLiveClasses] = useState<LiveClass[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [newLiveClass, setNewLiveClass] = useState<Partial<LiveClass>>({
     title: "",
     description: "",
     scheduledStart: new Date().toISOString().slice(0, 16),
     status: "scheduled",
-    classId,
-    createdBy: currentUser.id,
+    classId: classroom.id,
+    createdBy: profile?.id || "", // Safely use profile id
     meetingUrl: ""
   });
   const [selectedLiveClass, setSelectedLiveClass] = useState<LiveClass | null>(null);
@@ -38,13 +38,31 @@ const LiveTab = ({ classId, currentUser }: LiveTabProps) => {
   const [isHosting, setIsHosting] = useState(false);
   const [hostUrl, setHostUrl] = useState("");
 
-  const isTeacher = currentUser.role === 'teacher';
+  // Make sure profile is defined before assuming it's a teacher
+  const isTeacher = profile?.role === 'teacher';
+
+  // Fetch live classes when component mounts or classroom changes
+  useEffect(() => {
+    if (classroom?.id) {
+      setLiveClasses(getLiveClassesForClassroom(classroom.id));
+    }
+  }, [classroom]);
 
   const handleCreateLiveClass = () => {
     if (!newLiveClass.title || !newLiveClass.scheduledStart) {
       toast({
         title: "Missing information",
         description: "Please provide a title and scheduled start time",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Safety check for profile id
+    if (!profile?.id) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to create a live class",
         variant: "destructive"
       });
       return;
@@ -57,21 +75,21 @@ const LiveTab = ({ classId, currentUser }: LiveTabProps) => {
       scheduledStart: newLiveClass.scheduledStart || new Date().toISOString(),
       scheduledEnd: newLiveClass.scheduledEnd,
       status: "scheduled",
-      classId,
-      createdBy: currentUser.id,
+      classId: classroom.id,
+      createdBy: profile.id,
       meetingUrl: newLiveClass.meetingUrl
     };
 
     createLiveClass(liveClassToCreate);
-    setLiveClasses(getLiveClassesForClassroom(classId));
+    setLiveClasses(getLiveClassesForClassroom(classroom.id));
     setIsCreating(false);
     setNewLiveClass({
       title: "",
       description: "",
       scheduledStart: new Date().toISOString().slice(0, 16),
       status: "scheduled",
-      classId,
-      createdBy: currentUser.id,
+      classId: classroom.id,
+      createdBy: profile.id,
       meetingUrl: ""
     });
 
@@ -95,7 +113,7 @@ const LiveTab = ({ classId, currentUser }: LiveTabProps) => {
     };
     
     updateLiveClass(updatedLiveClass);
-    setLiveClasses(getLiveClassesForClassroom(classId));
+    setLiveClasses(getLiveClassesForClassroom(classroom.id));
     
     toast({
       title: "Live class started",
@@ -116,7 +134,7 @@ const LiveTab = ({ classId, currentUser }: LiveTabProps) => {
     };
     
     updateLiveClass(updatedLiveClass);
-    setLiveClasses(getLiveClassesForClassroom(classId));
+    setLiveClasses(getLiveClassesForClassroom(classroom.id));
     
     toast({
       title: "Live class ended",
@@ -131,7 +149,7 @@ const LiveTab = ({ classId, currentUser }: LiveTabProps) => {
     };
     
     updateLiveClass(updatedLiveClass);
-    setLiveClasses(getLiveClassesForClassroom(classId));
+    setLiveClasses(getLiveClassesForClassroom(classroom.id));
     
     toast({
       title: "Live class cancelled",
@@ -141,7 +159,7 @@ const LiveTab = ({ classId, currentUser }: LiveTabProps) => {
 
   const handleDeleteLiveClass = (liveClassId: string) => {
     deleteLiveClass(liveClassId);
-    setLiveClasses(getLiveClassesForClassroom(classId));
+    setLiveClasses(getLiveClassesForClassroom(classroom.id));
     
     toast({
       title: "Live class deleted",
@@ -517,7 +535,7 @@ const LiveTab = ({ classId, currentUser }: LiveTabProps) => {
                           meetingUrl: hostUrl
                         };
                         updateLiveClass(updatedLiveClass);
-                        setLiveClasses(getLiveClassesForClassroom(classId));
+                        setLiveClasses(getLiveClassesForClassroom(classroom.id));
                       }
                       setIsHosting(false);
                     }}

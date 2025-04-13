@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { getClassroomById } from '@/utils/storage';
 import { getAssignments } from '@/utils/storage/assignments';
 import { getLiveClasses } from '@/utils/storage/liveClasses';
-import { Assignment, Classroom, LiveClass, Announcement } from '@/utils/types';
+import { Assignment, Classroom, LiveClass } from '@/utils/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -28,9 +28,9 @@ const ClassroomDetails = () => {
   const [classroom, setClassroom] = useState<Classroom | null>(null);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [liveClasses, setLiveClasses] = useState<LiveClass[]>([]);
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isTeacher, setIsTeacher] = useState(false);
+  const [activeTab, setActiveTab] = useState("stream");
 
   useEffect(() => {
     const fetchClassroomDetails = async () => {
@@ -49,15 +49,12 @@ const ClassroomDetails = () => {
           // Check if the current user is the teacher of this classroom
           setIsTeacher(profile?.id === classroomData.teacherId);
 
-          // Fetch assignments, live classes, and announcements
+          // Fetch assignments, live classes
           const assignmentsData = await getAssignments(id);
           setAssignments(assignmentsData);
 
           const liveClassesData = await getLiveClasses();
           setLiveClasses(liveClassesData.filter(liveClass => liveClass.classId === id));
-
-          // Announcements would be fetched here (not yet implemented)
-          setAnnouncements([]);
         } else {
           console.error(`Classroom with ID ${id} not found`);
           navigate('/not-found');
@@ -123,12 +120,16 @@ const ClassroomDetails = () => {
           </Card>
 
           {classroom && (
-            <ClassTabs classroom={classroom}>
+            <ClassTabs 
+              classroom={classroom} 
+              activeTab={activeTab} 
+              onTabChange={setActiveTab}
+            >
               <TabsContent value="stream">
-                <StreamTab classroom={classroom} assignments={assignments} announcements={announcements} />
+                <StreamTab classroom={classroom} />
               </TabsContent>
               <TabsContent value="classwork">
-                <ClassworkTab classroom={classroom} assignments={assignments} />
+                <ClassworkTab classroom={classroom} />
               </TabsContent>
               <TabsContent value="grades">
                 <GradesTab 

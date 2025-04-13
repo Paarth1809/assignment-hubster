@@ -4,7 +4,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { getClassroomById } from '@/utils/storage';
 import { getAssignments } from '@/utils/storage/assignments';
-import { getLiveClasses } from '@/utils/storage/liveClasses';
 import { Assignment, Classroom, LiveClass } from '@/utils/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -27,7 +26,6 @@ const ClassroomDetails = () => {
   const { user, profile } = useAuth();
   const [classroom, setClassroom] = useState<Classroom | null>(null);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const [liveClasses, setLiveClasses] = useState<LiveClass[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isTeacher, setIsTeacher] = useState(false);
   const [activeTab, setActiveTab] = useState("stream");
@@ -49,12 +47,9 @@ const ClassroomDetails = () => {
           // Check if the current user is the teacher of this classroom
           setIsTeacher(profile?.id === classroomData.teacherId);
 
-          // Fetch assignments, live classes
+          // Fetch assignments
           const assignmentsData = await getAssignments(id);
           setAssignments(assignmentsData);
-
-          const liveClassesData = await getLiveClasses();
-          setLiveClasses(liveClassesData.filter(liveClass => liveClass.classId === id));
         } else {
           console.error(`Classroom with ID ${id} not found`);
           navigate('/not-found');

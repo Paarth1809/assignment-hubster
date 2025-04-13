@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { getClassroomById } from '@/utils/storage';
-import { getAssignments } from '@/utils/storage/assignments';
+import { getAssignmentsForClass } from '@/utils/storage/assignments';
 import { Assignment, Classroom, LiveClass } from '@/utils/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -48,7 +48,7 @@ const ClassroomDetails = () => {
           setIsTeacher(profile?.id === classroomData.teacherId);
 
           // Fetch assignments
-          const assignmentsData = await getAssignments(id);
+          const assignmentsData = await getAssignmentsForClass(id);
           setAssignments(assignmentsData);
         } else {
           console.error(`Classroom with ID ${id} not found`);

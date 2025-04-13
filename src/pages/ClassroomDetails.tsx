@@ -1,98 +1,139 @@
-import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { getClassroomById } from "@/utils/storage";
-import { useToast } from "@/hooks/use-toast";
-import ClassHeader from "@/components/classroom/ClassHeader";
-import ClassTabs from "@/components/classroom/ClassTabs";
-import NotFoundContent from "@/components/classroom/NotFoundContent";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import { Classroom } from "@/utils/types";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
-import StreamTab from "@/components/classroom/StreamTab";
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
+import { getClassroomById } from '@/utils/storage';
+import { getAssignments } from '@/utils/storage/assignments';
+import { getLiveClasses } from '@/utils/storage/liveClasses';
+import { Announcement, Assignment, Classroom, LiveClass } from '@/utils/types';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
+import { Calendar, Clock, BookOpen } from 'lucide-react';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import ClassTabs from '@/components/classroom/ClassTabs';
+import StreamTab from '@/components/classroom/StreamTab';
+import ClassworkTab from '@/components/classroom/ClassworkTab';
+import GradesTab from '@/components/classroom/GradesTab';
+import LiveTab from '@/components/classroom/LiveTab';
+import PeopleTab from '@/components/classroom/PeopleTab';
+import SettingsTab from '@/components/classroom/SettingsTab';
 
 const ClassroomDetails = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams();
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { user, profile } = useAuth();
   const [classroom, setClassroom] = useState<Classroom | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [liveClasses, setLiveClasses] = useState<LiveClass[]>([]);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isTeacher, setIsTeacher] = useState(false);
 
   useEffect(() => {
-    const fetchClassroom = async () => {
+    const fetchClassroomDetails = async () => {
       if (!id) {
-        setError("Class ID is missing");
-        setLoading(false);
+        console.error("No classroom ID provided");
+        navigate('/not-found');
         return;
       }
 
       try {
-        // Properly await the Promise from getClassroomById
+        setIsLoading(true);
         const classroomData = await getClassroomById(id);
-        if (!classroomData) {
-          setError("Class not found");
-        } else {
+        if (classroomData) {
           setClassroom(classroomData);
+
+          // Check if the current user is the teacher of this classroom
+          setIsTeacher(profile?.id === classroomData.teacherId);
+
+          // Fetch assignments, live classes, and announcements
+          const assignmentsData = await getAssignments(id);
+          setAssignments(assignmentsData);
+
+          const liveClassesData = await getLiveClasses();
+          setLiveClasses(liveClassesData.filter(liveClass => liveClass.classId === id));
+
+          // Announcements would be fetched here (not yet implemented)
+          setAnnouncements([]);
+        } else {
+          console.error(`Classroom with ID ${id} not found`);
+          navigate('/not-found');
         }
-      } catch (err) {
-        console.error("Error fetching classroom:", err);
-        setError("Failed to load classroom data");
-        toast({
-          title: "Error",
-          description: "Failed to load classroom data",
-          variant: "destructive",
-        });
+      } catch (error) {
+        console.error("Failed to fetch classroom details:", error);
+        navigate('/not-found');
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
-    fetchClassroom();
-  }, [id, toast]);
+    fetchClassroomDetails();
+  }, [id, navigate, user, profile]);
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin h-12 w-12 border-4 border-primary border-t-transparent rounded-full"></div>
-      </div>
-    );
-  }
-
-  if (error || !classroom) {
-    return (
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-background">
         <Navbar />
-        <main className="container mx-auto py-20 px-6">
-          <NotFoundContent message={error || "Class not found"} />
+        <main className="pt-20 pb-20 px-6">
+          <div className="max-w-4xl mx-auto">
+            <Skeleton className="h-12 w-full mb-4" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Skeleton className="h-48 w-full" />
+              <Skeleton className="h-48 w-full" />
+            </div>
+            <Skeleton className="h-96 w-full mt-4" />
+          </div>
         </main>
         <Footer />
       </div>
     );
   }
 
-  const handleTabChange = (value: string) => {
-    setActiveTab(value);
-  };
-
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main>
-        <ClassHeader classroom={classroom} />
-        <div className="container mx-auto px-4 pb-16">
-          <Tabs value={activeTab} onValueChange={handleTabChange}>
-            <ClassTabs 
-              activeTab={activeTab} 
-              onTabChange={handleTabChange}
-              classroom={classroom} 
-            />
-            <TabsContent value="dashboard">
-              <StreamTab classroom={classroom} assignments={[]} />
-            </TabsContent>
-            {/* Other tab contents would go here */}
-          </Tabs>
+      <main className="pt-20 pb-20 px-6">
+        <div className="max-w-4xl mx-auto">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-2xl font-bold">{classroom?.name}</CardTitle>
+              <Badge variant="secondary">
+                <BookOpen className="h-4 w-4 mr-2" />
+                {isTeacher ? 'Teacher' : 'Student'}
+              </Badge>
+            </CardHeader>
+            <CardContent>
+              <CardDescription>
+                {classroom?.description || 'No description provided.'}
+              </CardDescription>
+              <div className="mt-4 flex items-center text-sm text-muted-foreground">
+                <Calendar className="h-4 w-4 mr-2" />
+                Created on: {new Date(classroom?.createdAt || '').toLocaleDateString()}
+              </div>
+              {classroom?.section && (
+                <div className="mt-2 flex items-center text-sm text-muted-foreground">
+                  <Clock className="h-4 w-4 mr-2" />
+                  Section: {classroom?.section}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {classroom && (
+            <ClassTabs>
+              <StreamTab announcements={announcements} />
+              <ClassworkTab assignments={assignments} />
+              <GradesTab 
+                assignments={assignments} 
+                classroomId={classroom.id}
+                teacherId={classroom.teacherId}
+              />
+              <LiveTab liveClasses={liveClasses} classroom={classroom} />
+              <PeopleTab classroom={classroom} />
+              {isTeacher && <SettingsTab classroom={classroom} />}
+            </ClassTabs>
+          )}
         </div>
       </main>
       <Footer />

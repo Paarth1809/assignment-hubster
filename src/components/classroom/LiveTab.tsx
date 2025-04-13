@@ -1,45 +1,79 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import { LiveClass, Classroom } from "@/utils/types";
-import { createLiveClass, getLiveClassesForClassroom, updateLiveClass, deleteLiveClass } from "@/utils/storage/liveClasses";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { AlertCircle, Calendar, Clock, Link, Play, Plus, Video, X } from "lucide-react";
+import { LiveClass, UserProfile } from "@/utils/types";
+import { createLiveClass, getLiveClassesForClassroom, updateLiveClass, deleteLiveClass } from "@/utils/storage";
+import { Badge } from "@/components/ui/badge";
+import { formatDate } from "@/utils/assignmentUtils";
+import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/context/AuthContext";
-import CreateLiveClassDialog from "./live/CreateLiveClassDialog";
-import LiveClassCard from "./live/LiveClassCard";
-import JoinLiveClassDialog from "./live/JoinLiveClassDialog";
-import HostLiveClassDialog from "./live/HostLiveClassDialog";
-import EmptyLiveClasses from "./live/EmptyLiveClasses";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface LiveTabProps {
-  classroom: Classroom;
+  classId: string;
+  currentUser: UserProfile;
 }
 
-const LiveTab = ({ classroom }: LiveTabProps) => {
-  const { profile } = useAuth();
+const LiveTab = ({ classId, currentUser }: LiveTabProps) => {
   const { toast } = useToast();
-  const [liveClasses, setLiveClasses] = useState<LiveClass[]>([]);
+  const [liveClasses, setLiveClasses] = useState<LiveClass[]>(getLiveClassesForClassroom(classId));
   const [isCreating, setIsCreating] = useState(false);
+  const [newLiveClass, setNewLiveClass] = useState<Partial<LiveClass>>({
+    title: "",
+    description: "",
+    scheduledStart: new Date().toISOString().slice(0, 16),
+    status: "scheduled",
+    classId,
+    createdBy: currentUser.id,
+    meetingUrl: ""
+  });
   const [selectedLiveClass, setSelectedLiveClass] = useState<LiveClass | null>(null);
   const [isJoining, setIsJoining] = useState(false);
   const [isHosting, setIsHosting] = useState(false);
   const [hostUrl, setHostUrl] = useState("");
 
-  // Make sure profile is defined before assuming it's a teacher
-  const isTeacher = profile?.role === 'teacher';
+  const isTeacher = currentUser.role === 'teacher';
 
-  // Fetch live classes when component mounts or classroom changes
-  useEffect(() => {
-    if (classroom?.id) {
-      setLiveClasses(getLiveClassesForClassroom(classroom.id));
+  const handleCreateLiveClass = () => {
+    if (!newLiveClass.title || !newLiveClass.scheduledStart) {
+      toast({
+        title: "Missing information",
+        description: "Please provide a title and scheduled start time",
+        variant: "destructive"
+      });
+      return;
     }
-  }, [classroom]);
 
-  const handleCreateLiveClass = (liveClassToCreate: LiveClass) => {
+    const liveClassToCreate: LiveClass = {
+      id: `live-${Date.now()}`,
+      title: newLiveClass.title || "",
+      description: newLiveClass.description,
+      scheduledStart: newLiveClass.scheduledStart || new Date().toISOString(),
+      scheduledEnd: newLiveClass.scheduledEnd,
+      status: "scheduled",
+      classId,
+      createdBy: currentUser.id,
+      meetingUrl: newLiveClass.meetingUrl
+    };
+
     createLiveClass(liveClassToCreate);
-    setLiveClasses(getLiveClassesForClassroom(classroom.id));
+    setLiveClasses(getLiveClassesForClassroom(classId));
     setIsCreating(false);
+    setNewLiveClass({
+      title: "",
+      description: "",
+      scheduledStart: new Date().toISOString().slice(0, 16),
+      status: "scheduled",
+      classId,
+      createdBy: currentUser.id,
+      meetingUrl: ""
+    });
 
     toast({
       title: "Live class created",
@@ -61,7 +95,7 @@ const LiveTab = ({ classroom }: LiveTabProps) => {
     };
     
     updateLiveClass(updatedLiveClass);
-    setLiveClasses(getLiveClassesForClassroom(classroom.id));
+    setLiveClasses(getLiveClassesForClassroom(classId));
     
     toast({
       title: "Live class started",
@@ -82,7 +116,7 @@ const LiveTab = ({ classroom }: LiveTabProps) => {
     };
     
     updateLiveClass(updatedLiveClass);
-    setLiveClasses(getLiveClassesForClassroom(classroom.id));
+    setLiveClasses(getLiveClassesForClassroom(classId));
     
     toast({
       title: "Live class ended",
@@ -97,7 +131,7 @@ const LiveTab = ({ classroom }: LiveTabProps) => {
     };
     
     updateLiveClass(updatedLiveClass);
-    setLiveClasses(getLiveClassesForClassroom(classroom.id));
+    setLiveClasses(getLiveClassesForClassroom(classId));
     
     toast({
       title: "Live class cancelled",
@@ -107,7 +141,7 @@ const LiveTab = ({ classroom }: LiveTabProps) => {
 
   const handleDeleteLiveClass = (liveClassId: string) => {
     deleteLiveClass(liveClassId);
-    setLiveClasses(getLiveClassesForClassroom(classroom.id));
+    setLiveClasses(getLiveClassesForClassroom(classId));
     
     toast({
       title: "Live class deleted",
@@ -115,27 +149,24 @@ const LiveTab = ({ classroom }: LiveTabProps) => {
     });
   };
 
+  const getStatusBadge = (status: LiveClass['status']) => {
+    switch (status) {
+      case 'scheduled':
+        return <Badge variant="outline" className="bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300">Scheduled</Badge>;
+      case 'live':
+        return <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300">Live Now</Badge>;
+      case 'completed':
+        return <Badge variant="outline" className="bg-gray-50 text-gray-700 dark:bg-gray-900/20 dark:text-gray-300">Completed</Badge>;
+      case 'cancelled':
+        return <Badge variant="outline" className="bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300">Cancelled</Badge>;
+      default:
+        return <Badge variant="outline">Unknown</Badge>;
+    }
+  };
+
   const handleJoinLiveClass = (liveClass: LiveClass) => {
     setSelectedLiveClass(liveClass);
     setIsJoining(true);
-  };
-
-  const handleHostLiveClass = (liveClass: LiveClass) => {
-    setSelectedLiveClass(liveClass);
-    setHostUrl(liveClass.meetingUrl || '');
-    setIsHosting(true);
-  };
-
-  const handleCloseHostDialog = (updatedUrl?: string) => {
-    if (selectedLiveClass && updatedUrl && selectedLiveClass.meetingUrl !== updatedUrl) {
-      const updatedLiveClass = {
-        ...selectedLiveClass,
-        meetingUrl: updatedUrl
-      };
-      updateLiveClass(updatedLiveClass);
-      setLiveClasses(getLiveClassesForClassroom(classroom.id));
-    }
-    setIsHosting(false);
   };
 
   return (
@@ -143,19 +174,95 @@ const LiveTab = ({ classroom }: LiveTabProps) => {
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Live Classes</h2>
         {isTeacher && (
-          <CreateLiveClassDialog 
-            classroom={classroom}
-            profileId={profile?.id}
-            onCreate={handleCreateLiveClass}
-          />
+          <Dialog open={isCreating} onOpenChange={setIsCreating}>
+            <DialogTrigger asChild>
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                Schedule Live Class
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>Schedule a Live Class</DialogTitle>
+                <DialogDescription>
+                  Create a new live class session for your students. Fill in the details below to schedule it.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="title">Title</Label>
+                  <Input 
+                    id="title" 
+                    value={newLiveClass.title || ''}
+                    onChange={(e) => setNewLiveClass({...newLiveClass, title: e.target.value})}
+                    placeholder="Class title"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea 
+                    id="description" 
+                    value={newLiveClass.description || ''}
+                    onChange={(e) => setNewLiveClass({...newLiveClass, description: e.target.value})}
+                    placeholder="Provide details about this live class"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="scheduledStart">Scheduled Start</Label>
+                  <Input 
+                    id="scheduledStart" 
+                    type="datetime-local"
+                    value={newLiveClass.scheduledStart ? new Date(newLiveClass.scheduledStart).toISOString().slice(0, 16) : ''}
+                    onChange={(e) => setNewLiveClass({...newLiveClass, scheduledStart: e.target.value})}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="scheduledEnd">Scheduled End (Optional)</Label>
+                  <Input 
+                    id="scheduledEnd" 
+                    type="datetime-local"
+                    value={newLiveClass.scheduledEnd ? new Date(newLiveClass.scheduledEnd).toISOString().slice(0, 16) : ''}
+                    onChange={(e) => setNewLiveClass({...newLiveClass, scheduledEnd: e.target.value})}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="meetingUrl">Meeting URL (Optional)</Label>
+                  <Input 
+                    id="meetingUrl" 
+                    value={newLiveClass.meetingUrl || ''}
+                    onChange={(e) => setNewLiveClass({...newLiveClass, meetingUrl: e.target.value})}
+                    placeholder="https://meet.example.com/your-meeting-id"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Leave blank to auto-generate a meeting URL when you start the class
+                  </p>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsCreating(false)}>Cancel</Button>
+                <Button onClick={handleCreateLiveClass}>Schedule Live Class</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         )}
       </div>
 
       {liveClasses.length === 0 ? (
-        <EmptyLiveClasses 
-          isTeacher={isTeacher}
-          onCreateClick={() => setIsCreating(true)}
-        />
+        <div className="py-12 text-center">
+          <Video className="mx-auto h-12 w-12 text-muted-foreground opacity-50" />
+          <h3 className="mt-4 text-lg font-medium">No live classes scheduled</h3>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {isTeacher 
+              ? "Schedule a live class for your students by clicking the 'Schedule Live Class' button." 
+              : "Your teacher hasn't scheduled any live classes yet."}
+          </p>
+          {isTeacher && (
+            <Button className="mt-4" onClick={() => setIsCreating(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Schedule Live Class
+            </Button>
+          )}
+        </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {liveClasses
@@ -169,34 +276,260 @@ const LiveTab = ({ classroom }: LiveTabProps) => {
               return new Date(b.scheduledStart).getTime() - new Date(a.scheduledStart).getTime();
             })
             .map(liveClass => (
-              <LiveClassCard
-                key={liveClass.id}
-                liveClass={liveClass}
-                isTeacher={isTeacher}
-                onJoin={handleJoinLiveClass}
-                onHost={handleHostLiveClass}
-                onStart={handleStartLiveClass}
-                onEnd={handleEndLiveClass}
-                onCancel={handleCancelLiveClass}
-                onDelete={handleDeleteLiveClass}
-              />
+              <Card key={liveClass.id} className={liveClass.status === 'live' ? 'border-green-500 dark:border-green-700' : ''}>
+                <CardHeader className="pb-2">
+                  <div className="flex justify-between items-start">
+                    <CardTitle className="text-lg">{liveClass.title}</CardTitle>
+                    {getStatusBadge(liveClass.status)}
+                  </div>
+                  <CardDescription className="line-clamp-2">
+                    {liveClass.description || "No description provided"}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pb-2 text-sm">
+                  <div className="flex flex-col space-y-2">
+                    <div className="flex items-center">
+                      <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                      <span>{formatDate(liveClass.scheduledStart)}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+                      <span>
+                        {new Date(liveClass.scheduledStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {liveClass.scheduledEnd && ` - ${new Date(liveClass.scheduledEnd).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
+                      </span>
+                    </div>
+                    {liveClass.meetingUrl && liveClass.status === 'live' && (
+                      <div className="flex items-center">
+                        <Link className="h-4 w-4 mr-2 text-muted-foreground" />
+                        <a 
+                          href={liveClass.meetingUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-primary truncate hover:underline"
+                        >
+                          Meeting Link
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+                <CardFooter className="pt-2">
+                  {isTeacher ? (
+                    <div className="flex flex-wrap justify-between w-full gap-2">
+                      {liveClass.status === 'scheduled' && (
+                        <>
+                          <Button size="sm" onClick={() => handleStartLiveClass(liveClass)}>
+                            <Play className="h-4 w-4 mr-2" />
+                            Start Class
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            onClick={() => handleCancelLiveClass(liveClass)}
+                          >
+                            <X className="h-4 w-4 mr-2" />
+                            Cancel
+                          </Button>
+                        </>
+                      )}
+                      {liveClass.status === 'live' && (
+                        <>
+                          <Button 
+                            size="sm"
+                            onClick={() => {
+                              setSelectedLiveClass(liveClass);
+                              setHostUrl(liveClass.meetingUrl || '');
+                              setIsHosting(true);
+                            }}
+                          >
+                            Host Again
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="destructive" 
+                            onClick={() => handleEndLiveClass(liveClass)}
+                          >
+                            End Class
+                          </Button>
+                        </>
+                      )}
+                      {(liveClass.status === 'completed' || liveClass.status === 'cancelled') && (
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => handleDeleteLiveClass(liveClass.id)}
+                        >
+                          Delete
+                        </Button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="w-full">
+                      {liveClass.status === 'live' ? (
+                        <Button 
+                          className="w-full" 
+                          onClick={() => handleJoinLiveClass(liveClass)}
+                        >
+                          Join Live Class
+                        </Button>
+                      ) : liveClass.status === 'scheduled' ? (
+                        <Button 
+                          variant="outline" 
+                          className="w-full"
+                          disabled
+                        >
+                          Not Started Yet
+                        </Button>
+                      ) : (
+                        <Button 
+                          variant="outline" 
+                          className="w-full" 
+                          disabled
+                        >
+                          {liveClass.status === 'completed' ? 'Class Ended' : 'Class Cancelled'}
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </CardFooter>
+              </Card>
             ))}
         </div>
       )}
 
       {/* Dialog for students to join live class */}
-      <JoinLiveClassDialog
-        isOpen={isJoining}
-        onClose={() => setIsJoining(false)}
-        liveClass={selectedLiveClass}
-      />
+      <Dialog open={isJoining} onOpenChange={setIsJoining}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Join Live Class</DialogTitle>
+            <DialogDescription>
+              You're about to join the live class session.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            {selectedLiveClass?.meetingUrl ? (
+              <>
+                <div className="mb-4">
+                  <h3 className="font-medium">{selectedLiveClass.title}</h3>
+                  <p className="text-sm text-muted-foreground">{selectedLiveClass.description}</p>
+                </div>
+                <Separator className="my-4" />
+                <p className="text-sm mb-4">
+                  You're about to join the live class. Click the button below to open the meeting link.
+                </p>
+                <div className="flex justify-center">
+                  <a 
+                    href={selectedLiveClass.meetingUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="w-full"
+                  >
+                    <Button className="w-full">
+                      Join Meeting
+                    </Button>
+                  </a>
+                </div>
+              </>
+            ) : (
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>No meeting link available</AlertTitle>
+                <AlertDescription>
+                  The teacher has not provided a meeting link for this live class. Please contact your teacher for more information.
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsJoining(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Dialog for teachers to host live class */}
-      <HostLiveClassDialog
-        isOpen={isHosting}
-        onClose={handleCloseHostDialog}
-        liveClass={selectedLiveClass}
-      />
+      <Dialog open={isHosting} onOpenChange={setIsHosting}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Host Live Class</DialogTitle>
+            <DialogDescription>
+              You're about to host a live class session.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            {selectedLiveClass && (
+              <>
+                <div className="mb-4">
+                  <h3 className="font-medium">{selectedLiveClass.title}</h3>
+                  <p className="text-sm text-muted-foreground">{selectedLiveClass.description}</p>
+                </div>
+                <Separator className="my-4" />
+                <div className="mb-4">
+                  <Label htmlFor="hostUrl">Meeting URL</Label>
+                  <div className="flex items-center mt-1">
+                    <Input 
+                      id="hostUrl" 
+                      value={hostUrl}
+                      onChange={(e) => setHostUrl(e.target.value)}
+                      className="mr-2"
+                      readOnly
+                    />
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      onClick={() => {
+                        navigator.clipboard.writeText(hostUrl);
+                        toast({
+                          title: "Copied",
+                          description: "Meeting URL copied to clipboard",
+                        });
+                      }}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                    </Button>
+                  </div>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    Share this link with your students so they can join the live class.
+                  </p>
+                </div>
+
+                <div className="flex justify-between">
+                  <a 
+                    href={hostUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="flex-1 mr-2"
+                  >
+                    <Button className="w-full">
+                      Start Hosting
+                    </Button>
+                  </a>
+                  <Button 
+                    variant="outline" 
+                    className="flex-1 ml-2" 
+                    onClick={() => {
+                      // Update the meeting URL if changed
+                      if (selectedLiveClass.meetingUrl !== hostUrl) {
+                        const updatedLiveClass = {
+                          ...selectedLiveClass,
+                          meetingUrl: hostUrl
+                        };
+                        updateLiveClass(updatedLiveClass);
+                        setLiveClasses(getLiveClassesForClassroom(classId));
+                      }
+                      setIsHosting(false);
+                    }}
+                  >
+                    Close
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

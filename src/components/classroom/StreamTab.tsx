@@ -1,14 +1,13 @@
 
-import { Assignment, Classroom, Announcement } from "@/utils/types";
+import { Assignment, Classroom } from "@/utils/types";
 import { FileText } from "lucide-react";
 
 interface StreamTabProps {
   classroom: Classroom;
-  assignments?: Assignment[];
-  announcements?: Announcement[];
+  assignments: Assignment[];
 }
 
-const StreamTab = ({ classroom, assignments = [], announcements = [] }: StreamTabProps) => {
+const StreamTab = ({ classroom, assignments }: StreamTabProps) => {
   return (
     <div className="space-y-8">
       <div className="glass rounded-xl p-6 shadow-md">
@@ -17,27 +16,6 @@ const StreamTab = ({ classroom, assignments = [], announcements = [] }: StreamTa
           {classroom.description || "No class description available."}
         </p>
       </div>
-      
-      {announcements.length > 0 && (
-        <div className="space-y-4">
-          <h2 className="text-xl font-medium">Announcements</h2>
-          <div className="space-y-3">
-            {announcements.map((announcement) => (
-              <div 
-                key={announcement.id} 
-                className="p-4 border rounded-lg hover:bg-muted/20 transition-colors"
-              >
-                <h3 className="font-medium">{announcement.title}</h3>
-                <p className="text-sm text-muted-foreground mt-2">{announcement.content}</p>
-                <div className="flex justify-between mt-3 text-xs text-muted-foreground">
-                  <span>{announcement.author}</span>
-                  <span>{new Date(announcement.dateCreated).toLocaleDateString()}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
       
       <div className="space-y-4">
         <h2 className="text-xl font-medium">Upcoming</h2>

@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/context/AuthContext";
 import Index from "./pages/Index";
 import CreateClass from "./pages/CreateClass";
 import JoinClass from "./pages/JoinClass";
@@ -46,49 +47,51 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/auth" element={<Auth />} />
-            
-            {/* Protected Routes */}
-            <Route path="/" element={
-              <ProtectedRoute>
-                <Index />
-              </ProtectedRoute>
-            } />
-            <Route path="/create-class" element={
-              <ProtectedRoute>
-                <CreateClass />
-              </ProtectedRoute>
-            } />
-            <Route path="/join-class" element={
-              <ProtectedRoute>
-                <JoinClass />
-              </ProtectedRoute>
-            } />
-            <Route path="/classroom/:id" element={
-              <ProtectedRoute>
-                <ClassroomDetails />
-              </ProtectedRoute>
-            } />
-            <Route path="/settings" element={
-              <ProtectedRoute>
-                <Settings />
-              </ProtectedRoute>
-            } />
-            <Route path="/account" element={
-              <ProtectedRoute>
-                <Account />
-              </ProtectedRoute>
-            } />
-            
-            {/* Catch-all Route */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <AuthProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/auth" element={<Auth />} />
+              
+              {/* Protected Routes */}
+              <Route path="/" element={
+                <ProtectedRoute>
+                  <Index />
+                </ProtectedRoute>
+              } />
+              <Route path="/create-class" element={
+                <ProtectedRoute>
+                  <CreateClass />
+                </ProtectedRoute>
+              } />
+              <Route path="/join-class" element={
+                <ProtectedRoute>
+                  <JoinClass />
+                </ProtectedRoute>
+              } />
+              <Route path="/classroom/:id" element={
+                <ProtectedRoute>
+                  <ClassroomDetails />
+                </ProtectedRoute>
+              } />
+              <Route path="/settings" element={
+                <ProtectedRoute>
+                  <Settings />
+                </ProtectedRoute>
+              } />
+              <Route path="/account" element={
+                <ProtectedRoute>
+                  <Account />
+                </ProtectedRoute>
+              } />
+              
+              {/* Catch-all Route */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

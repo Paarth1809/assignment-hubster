@@ -2,7 +2,7 @@
 // Re-export all storage-related functions
 export * from './base';
 export * from './users';
-export * from './classrooms'; // This now points to our refactored classrooms/index.ts
+export * from './classrooms';
 export * from './assignments';
 export * from './liveClasses';
 

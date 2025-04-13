@@ -5,7 +5,7 @@ import { PlusCircle, FileUp } from "lucide-react";
 import AssignmentList from "@/components/AssignmentList";
 import UploadForm from "@/components/UploadForm";
 import { useState, useEffect } from "react";
-import { getAssignmentsForClass } from "@/utils/storage";
+import { getAssignmentsForClass, saveAssignment } from "@/utils/storage/assignments";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
@@ -16,7 +16,7 @@ interface ClassworkTabProps {
 
 const ClassworkTab = ({ classroom }: ClassworkTabProps) => {
   const { toast } = useToast();
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [currentAssignments, setCurrentAssignments] = useState<Assignment[]>([]);
   const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(null);
@@ -27,9 +27,13 @@ const ClassworkTab = ({ classroom }: ClassworkTabProps) => {
   // Load assignments when the component mounts or when classId changes
   useEffect(() => {
     if (classId) {
-      setCurrentAssignments(getAssignmentsForClass(classId));
+      refreshAssignments();
     }
   }, [classId]);
+
+  const refreshAssignments = () => {
+    setCurrentAssignments(getAssignmentsForClass(classId));
+  };
 
   const handleCreateAssignment = () => {
     setEditingAssignment(null);
@@ -68,7 +72,7 @@ const ClassworkTab = ({ classroom }: ClassworkTabProps) => {
     setShowUploadForm(false);
     setEditingAssignment(null);
     // Refresh assignments list
-    setCurrentAssignments(getAssignmentsForClass(classId));
+    refreshAssignments();
     
     toast({
       title: editingAssignment ? "Assignment Updated" : "Assignment Created",
@@ -115,7 +119,7 @@ const ClassworkTab = ({ classroom }: ClassworkTabProps) => {
       
       <AssignmentList 
         classId={classId} 
-        onAssignmentUpdate={() => setCurrentAssignments(getAssignmentsForClass(classId))}
+        onAssignmentUpdate={refreshAssignments}
         isTeacher={isTeacher}
         onEditAssignment={isTeacher ? handleEditAssignment : undefined}
       />

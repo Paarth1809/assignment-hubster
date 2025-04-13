@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { getClassroomById } from '@/utils/storage';
 import { getAssignmentsForClass } from '@/utils/storage/assignments';
-import { Assignment, Classroom, LiveClass } from '@/utils/types';
+import { Assignment, Classroom } from '@/utils/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -48,7 +47,7 @@ const ClassroomDetails = () => {
           setIsTeacher(profile?.id === classroomData.teacherId);
 
           // Fetch assignments
-          const assignmentsData = await getAssignmentsForClass(id);
+          const assignmentsData = getAssignmentsForClass(id);
           setAssignments(assignmentsData);
         } else {
           console.error(`Classroom with ID ${id} not found`);
@@ -64,6 +63,14 @@ const ClassroomDetails = () => {
 
     fetchClassroomDetails();
   }, [id, navigate, user, profile]);
+
+  // Refresh assignments when active tab changes to classwork or grades
+  useEffect(() => {
+    if ((activeTab === 'classwork' || activeTab === 'grades') && id) {
+      const assignmentsData = getAssignmentsForClass(id);
+      setAssignments(assignmentsData);
+    }
+  }, [activeTab, id]);
 
   if (isLoading) {
     return (

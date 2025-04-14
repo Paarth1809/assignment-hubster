@@ -1,4 +1,3 @@
-
 import { Assignment } from "../types";
 import { getLocalStorage, setLocalStorage } from "./base";
 
@@ -36,6 +35,9 @@ export const isAssignmentPastDue = (assignment: Assignment): boolean => {
 
 // Check if submissions are allowed for an assignment
 export const isSubmissionAllowed = (assignment: Assignment): boolean => {
+  // If assignment is locked, submission is not allowed
+  if (assignment.locked) return false;
+  
   // If there's no due date, submission is allowed
   if (!assignment.dueDate) return true;
   
@@ -71,7 +73,9 @@ export const saveAssignment = (assignmentData: any): Assignment => {
     classId: assignmentData.classId,
     dueDate: assignmentData.dueDate,
     allowLateSubmissions: assignmentData.allowLateSubmissions,
-    points: assignmentData.points
+    locked: assignmentData.locked,
+    points: assignmentData.points,
+    studentId: assignmentData.studentId
   };
   
   if (assignmentData.id) {

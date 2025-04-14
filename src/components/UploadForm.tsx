@@ -7,6 +7,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Assignment } from '@/utils/types';
 import { useAuth } from "@/context/AuthContext";
+import { Calendar, Clock, Lock, LockOpen } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface FileDetails {
   name: string;
@@ -32,7 +38,9 @@ const UploadForm = ({ classId, assignment, onSuccess, onCancel, isSubmission = f
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [dueTime, setDueTime] = useState('');
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [allowLateSubmissions, setAllowLateSubmissions] = useState(true);
+  const [locked, setLocked] = useState(false);
   const [points, setPoints] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -48,6 +56,7 @@ const UploadForm = ({ classId, assignment, onSuccess, onCancel, isSubmission = f
         const dueDateTime = new Date(assignment.dueDate);
         // Format date as YYYY-MM-DD for the date input
         setDueDate(dueDateTime.toISOString().split('T')[0]);
+        setSelectedDate(dueDateTime);
         
         // Format time as HH:MM for the time input
         const hours = dueDateTime.getHours().toString().padStart(2, '0');
@@ -56,6 +65,7 @@ const UploadForm = ({ classId, assignment, onSuccess, onCancel, isSubmission = f
       }
       
       setAllowLateSubmissions(assignment.allowLateSubmissions !== false);
+      setLocked(assignment.locked === true);
       setPoints(assignment.points ? assignment.points.toString() : '');
       
       // Set file details from existing assignment
@@ -122,6 +132,15 @@ const UploadForm = ({ classId, assignment, onSuccess, onCancel, isSubmission = f
     setFileDetails(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+  };
+
+  const handleDateSelect = (date: Date | undefined) => {
+    setSelectedDate(date);
+    if (date) {
+      setDueDate(date.toISOString().split('T')[0]);
+    } else {
+      setDueDate('');
     }
   };
 
@@ -232,6 +251,7 @@ const UploadForm = ({ classId, assignment, onSuccess, onCancel, isSubmission = f
             classId,
             dueDate: dueDateISO,
             allowLateSubmissions,
+            locked,
             points: points ? parseInt(points) : undefined,
             ...(assignment ? { 
               dateSubmitted: assignment.dateSubmitted,
@@ -261,7 +281,9 @@ const UploadForm = ({ classId, assignment, onSuccess, onCancel, isSubmission = f
         setFileDetails(null);
         setDueDate('');
         setDueTime('');
+        setSelectedDate(undefined);
         setAllowLateSubmissions(true);
+        setLocked(false);
         setPoints('');
         
         if (fileInputRef.current) {
@@ -311,39 +333,76 @@ const UploadForm = ({ classId, assignment, onSuccess, onCancel, isSubmission = f
               <Label htmlFor="dueDate">
                 Due Date
               </Label>
-              <Input
-                id="dueDate"
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-              />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !selectedDate && "text-muted-foreground"
+                    )}
+                    id="dueDate"
+                  >
+                    <Calendar className="mr-2 h-4 w-4" />
+                    {selectedDate ? format(selectedDate, "PPP") : <span>Select a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <CalendarComponent
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={handleDateSelect}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="dueTime">
                 Due Time
               </Label>
-              <Input
-                id="dueTime"
-                type="time"
-                value={dueTime}
-                onChange={(e) => setDueTime(e.target.value)}
-                placeholder="23:59"
-              />
+              <div className="flex items-center">
+                <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="dueTime"
+                  type="time"
+                  value={dueTime}
+                  onChange={(e) => setDueTime(e.target.value)}
+                  placeholder="23:59"
+                  className="w-full"
+                />
+              </div>
             </div>
           </div>
           
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="allowLateSubmissions"
-              checked={allowLateSubmissions}
-              onChange={(e) => setAllowLateSubmissions(e.target.checked)}
-              className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-            />
-            <Label htmlFor="allowLateSubmissions" className="text-sm font-normal">
-              Allow submissions after due date
-            </Label>
+          <div className="flex flex-col md:flex-row gap-6">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="allowLateSubmissions"
+                checked={allowLateSubmissions}
+                onCheckedChange={setAllowLateSubmissions}
+              />
+              <Label htmlFor="allowLateSubmissions" className="text-sm font-normal">
+                Allow late submissions
+              </Label>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="lockAssignment"
+                checked={locked}
+                onCheckedChange={setLocked}
+              />
+              <Label htmlFor="lockAssignment" className="text-sm font-normal flex items-center">
+                {locked ? 
+                  <Lock className="mr-1 h-4 w-4 text-red-500" /> : 
+                  <LockOpen className="mr-1 h-4 w-4 text-green-500" />
+                }
+                {locked ? "Assignment locked" : "Assignment unlocked"}
+              </Label>
+            </div>
           </div>
           
           <div className="space-y-2">

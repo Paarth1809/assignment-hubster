@@ -1,4 +1,3 @@
-
 export interface Assignment {
   id: string;
   title: string;
@@ -16,6 +15,7 @@ export interface Assignment {
   allowLateSubmissions?: boolean;
   points?: number;
   studentId?: string; // Added to track which student submitted the assignment
+  locked?: boolean; // Added to support locking assignments
 }
 
 export interface LiveClass {

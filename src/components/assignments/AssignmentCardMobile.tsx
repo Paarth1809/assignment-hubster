@@ -4,7 +4,7 @@ import { Assignment } from '@/utils/types';
 import { Button } from "@/components/ui/button";
 import { isAssignmentPastDue, isSubmissionAllowed } from '@/utils/storage/assignments';
 import { formatDate } from '@/utils/assignmentUtils';
-import { CalendarClock, Lock } from 'lucide-react';
+import { CalendarClock, Lock, SendHorizontal } from 'lucide-react';
 
 interface AssignmentCardMobileProps {
   assignment: Assignment;
@@ -12,6 +12,7 @@ interface AssignmentCardMobileProps {
   formatFileSize: (bytes: number) => string;
   onDelete?: (id: string) => void;
   onEdit?: (assignment: Assignment) => void;
+  onSubmit?: (assignment: Assignment) => void;
 }
 
 const AssignmentCardMobile = ({ 
@@ -19,7 +20,8 @@ const AssignmentCardMobile = ({
   getStatusColor, 
   formatFileSize, 
   onDelete,
-  onEdit
+  onEdit,
+  onSubmit
 }: AssignmentCardMobileProps) => {
   const isPastDue = isAssignmentPastDue(assignment);
   const submissionAllowed = isSubmissionAllowed(assignment);
@@ -82,6 +84,17 @@ const AssignmentCardMobile = ({
             onClick={() => onEdit(assignment)}
           >
             Edit
+          </Button>
+        )}
+        {onSubmit && assignment.status === 'pending' && (
+          <Button 
+            variant="default" 
+            size="sm" 
+            className="w-full"
+            onClick={() => onSubmit(assignment)}
+          >
+            <SendHorizontal className="h-3 w-3 mr-1" />
+            Submit
           </Button>
         )}
         <Button variant="outline" size="sm" className="w-full">

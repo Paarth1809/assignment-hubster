@@ -1,23 +1,17 @@
 
-import React from 'react';
-import { Assignment } from '@/utils/types';
+import { Assignment } from "@/utils/types";
 import { Button } from "@/components/ui/button";
-import { 
-  Table, 
-  TableHeader, 
-  TableBody, 
-  TableHead, 
-  TableRow,
-  TableCell 
-} from "@/components/ui/table";
+import { Edit, Trash, Download, SendHorizontal } from "lucide-react";
+import { isAssignmentPastDue, isSubmissionAllowed } from '@/utils/storage/assignments';
 
 interface AssignmentTableProps {
   assignments: Assignment[];
   getStatusColor: (status: Assignment['status']) => string;
   formatFileSize: (bytes: number) => string;
-  formatDate: (dateString: string) => string;
+  formatDate: (date: string) => string;
   onDelete?: (id: string) => void;
   onEdit?: (assignment: Assignment) => void;
+  onSubmit?: (assignment: Assignment) => void;
 }
 
 const AssignmentTable = ({ 
@@ -26,98 +20,97 @@ const AssignmentTable = ({
   formatFileSize, 
   formatDate, 
   onDelete,
-  onEdit 
+  onEdit,
+  onSubmit
 }: AssignmentTableProps) => {
   return (
-    <Table>
-      <TableHeader>
-        <TableRow className="bg-muted/50">
-          <TableHead className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            Assignment
-          </TableHead>
-          <TableHead className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            Date Submitted
-          </TableHead>
-          <TableHead className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            Status
-          </TableHead>
-          <TableHead className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            Actions
-          </TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody className="divide-y divide-border">
-        {assignments.map((assignment) => (
-          <TableRow key={assignment.id} className="hover:bg-muted/20 transition-colors">
-            <TableCell className="px-6 py-4 whitespace-nowrap">
-              <div className="flex items-start">
-                <div className="flex-shrink-0 h-10 w-10 rounded-md bg-primary/10 flex items-center justify-center">
-                  <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    width="20" 
-                    height="20" 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    strokeWidth="2" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    className="text-primary"
-                  >
-                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-                    <polyline points="14 2 14 8 20 8" />
-                  </svg>
-                </div>
-                <div className="ml-4">
-                  <h4 className="text-sm font-medium">{assignment.title}</h4>
-                  <div className="flex space-x-2 items-center mt-1">
-                    <span className="text-xs text-muted-foreground truncate max-w-[180px]">
-                      {assignment.fileName}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {formatFileSize(assignment.fileSize)}
-                    </span>
+    <table className="w-full">
+      <thead>
+        <tr className="border-b border-border">
+          <th className="text-left p-4 font-medium text-sm">Title</th>
+          <th className="text-left p-4 font-medium text-sm">Status</th>
+          <th className="text-left p-4 font-medium text-sm">Due Date</th>
+          <th className="text-center p-4 font-medium text-sm">File</th>
+          <th className="text-right p-4 font-medium text-sm">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {assignments.map((assignment) => {
+          const isPastDue = isAssignmentPastDue(assignment);
+          const submissionAllowed = isSubmissionAllowed(assignment);
+          
+          return (
+            <tr key={assignment.id} className="border-b border-border hover:bg-muted/10">
+              <td className="p-4 text-sm">
+                <div className="font-medium">{assignment.title}</div>
+                {assignment.description && (
+                  <div className="text-xs text-muted-foreground mt-1 line-clamp-1">
+                    {assignment.description}
                   </div>
+                )}
+              </td>
+              <td className="p-4 text-sm">
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(assignment.status)}`}>
+                  {assignment.status.charAt(0).toUpperCase() + assignment.status.slice(1)}
+                </span>
+              </td>
+              <td className="p-4 text-sm">
+                {assignment.dueDate ? (
+                  <div className={isPastDue ? "text-destructive" : ""}>
+                    {formatDate(assignment.dueDate)}
+                    {isPastDue && !submissionAllowed && (
+                      <div className="text-xs text-destructive mt-1">Closed</div>
+                    )}
+                  </div>
+                ) : (
+                  <span className="text-muted-foreground">No due date</span>
+                )}
+              </td>
+              <td className="p-4 text-sm text-center">
+                <div className="text-xs">{assignment.fileName}</div>
+                <div className="text-xs text-muted-foreground">{formatFileSize(assignment.fileSize)}</div>
+              </td>
+              <td className="p-4 text-sm">
+                <div className="flex justify-end gap-2">
+                  {onSubmit && assignment.status === 'pending' && (
+                    <Button 
+                      variant="default" 
+                      size="sm" 
+                      onClick={() => onSubmit(assignment)}
+                    >
+                      <SendHorizontal className="h-4 w-4 mr-1" />
+                      Submit
+                    </Button>
+                  )}
+                  <Button variant="outline" size="icon">
+                    <Download className="h-4 w-4" />
+                  </Button>
+                  {onEdit && (
+                    <Button 
+                      variant="outline" 
+                      size="icon"
+                      onClick={() => onEdit(assignment)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {onDelete && (
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      className="text-destructive hover:text-destructive"
+                      onClick={() => onDelete(assignment.id)}
+                    >
+                      <Trash className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
-              </div>
-            </TableCell>
-            <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-              {formatDate(assignment.dateSubmitted)}
-            </TableCell>
-            <TableCell className="px-6 py-4 whitespace-nowrap">
-              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(assignment.status)}`}>
-                {assignment.status.charAt(0).toUpperCase() + assignment.status.slice(1)}
-              </span>
-            </TableCell>
-            <TableCell className="px-6 py-4 whitespace-nowrap text-sm">
-              <div className="flex space-x-2">
-                {onEdit && (
-                  <Button 
-                    variant="ghost" 
-                    className="h-8 px-2 text-primary"
-                    onClick={() => onEdit(assignment)}
-                  >
-                    Edit
-                  </Button>
-                )}
-                <Button variant="ghost" className="h-8 px-2 text-primary">
-                  Download
-                </Button>
-                {onDelete && (
-                  <Button 
-                    variant="ghost" 
-                    className="h-8 px-2 text-destructive"
-                    onClick={() => onDelete(assignment.id)}
-                  >
-                    Delete
-                  </Button>
-                )}
-              </div>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
   );
 };
 

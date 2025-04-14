@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -17,6 +18,7 @@ import GradesTab from '@/components/classroom/GradesTab';
 import LiveTab from '@/components/classroom/LiveTab';
 import PeopleTab from '@/components/classroom/PeopleTab';
 import SettingsTab from '@/components/classroom/SettingsTab';
+import DashboardTab from '@/components/classroom/DashboardTab';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 
 const ClassroomDetails = () => {
@@ -66,7 +68,7 @@ const ClassroomDetails = () => {
 
   // Refresh assignments when active tab changes to classwork or grades
   useEffect(() => {
-    if ((activeTab === 'classwork' || activeTab === 'grades') && id) {
+    if ((activeTab === 'classwork' || activeTab === 'grades' || activeTab === 'dashboard') && id) {
       const assignmentsData = getAssignmentsForClass(id);
       setAssignments(assignmentsData);
     }
@@ -146,19 +148,14 @@ const ClassroomDetails = () => {
               <TabsContent value="people">
                 <PeopleTab classroom={classroom} />
               </TabsContent>
+              <TabsContent value="dashboard">
+                <DashboardTab classroom={classroom} />
+              </TabsContent>
               {isTeacher && (
                 <TabsContent value="settings">
-                  <SettingsTab classroom={classroom} />
+                  <SettingsTab classroom={classroom} currentUser={profile} />
                 </TabsContent>
               )}
-              <TabsContent value="dashboard">
-                <div className="space-y-4">
-                  <h2 className="text-xl font-medium">Dashboard</h2>
-                  <p className="text-muted-foreground">
-                    Welcome to the classroom dashboard. Here you'll find an overview of your progress and activities.
-                  </p>
-                </div>
-              </TabsContent>
             </ClassTabs>
           )}
         </div>

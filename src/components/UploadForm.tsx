@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Assignment } from '@/utils/types';
+import { useAuth } from "@/context/AuthContext";
 
 interface FileDetails {
   name: string;
@@ -19,10 +20,12 @@ interface UploadFormProps {
   assignment?: Assignment | null;
   onSuccess?: () => void;
   onCancel?: () => void;
+  isSubmission?: boolean;
 }
 
-const UploadForm = ({ classId, assignment, onSuccess, onCancel }: UploadFormProps) => {
+const UploadForm = ({ classId, assignment, onSuccess, onCancel, isSubmission = false }: UploadFormProps) => {
   const { toast } = useToast();
+  const { user, profile } = useAuth();
   const [dragActive, setDragActive] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [fileDetails, setFileDetails] = useState<FileDetails | null>(null);
@@ -126,7 +129,7 @@ const UploadForm = ({ classId, assignment, onSuccess, onCancel }: UploadFormProp
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!assignment && !file) {
+    if (!isSubmission && !assignment && !file) {
       toast({
         title: "No file selected",
         description: "Please select a file to upload",
@@ -135,7 +138,7 @@ const UploadForm = ({ classId, assignment, onSuccess, onCancel }: UploadFormProp
       return;
     }
     
-    if (!title.trim()) {
+    if (!title.trim() && !isSubmission) {
       toast({
         title: "Title required",
         description: "Please provide a title for your assignment",
@@ -143,11 +146,19 @@ const UploadForm = ({ classId, assignment, onSuccess, onCancel }: UploadFormProp
       });
       return;
     }
+
+    if (isSubmission && !file) {
+      toast({
+        title: "No file selected",
+        description: "Please select a file to submit",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setIsSubmitting(true);
     
-    // In a real app, this would upload to a server
-    // For now, we'll simulate a submission delay
+    // Simulate a submission delay
     setTimeout(() => {
       try {
         // If we're editing, we need to keep the existing file details if no new file was uploaded
@@ -191,33 +202,54 @@ const UploadForm = ({ classId, assignment, onSuccess, onCancel }: UploadFormProp
           
           dueDateISO = dateObj.toISOString();
         }
-            
-        const assignmentData = {
-          ...(assignment ? { id: assignment.id } : {}),
-          title,
-          description: description.trim() || undefined,
-          fileName: finalFileDetails.fileName,
-          fileSize: finalFileDetails.fileSize,
-          fileType: finalFileDetails.fileType,
-          classId,
-          dueDate: dueDateISO,
-          allowLateSubmissions,
-          points: points ? parseInt(points) : undefined,
-          ...(assignment ? { 
-            dateSubmitted: assignment.dateSubmitted,
-            status: assignment.status 
-          } : {})
-        };
-        
-        if (assignment) {
-          // Update existing assignment
+
+        if (isSubmission && assignment) {
+          // Update assignment status to 'submitted' when submitting
           updateAssignment({
             ...assignment,
-            ...assignmentData
+            status: 'submitted',
+            dateSubmitted: new Date().toISOString(),
+            fileName: finalFileDetails.fileName,
+            fileSize: finalFileDetails.fileSize,
+            fileType: finalFileDetails.fileType,
+          });
+          
+          toast({
+            title: "Assignment Submitted",
+            description: "Your assignment has been successfully submitted.",
           });
         } else {
-          // Create new assignment
-          saveAssignment(assignmentData);
+          // Create or update assignment
+          const assignmentData = {
+            ...(assignment ? { id: assignment.id } : {}),
+            title,
+            description: description.trim() || undefined,
+            fileName: finalFileDetails.fileName,
+            fileSize: finalFileDetails.fileSize,
+            fileType: finalFileDetails.fileType,
+            classId,
+            dueDate: dueDateISO,
+            allowLateSubmissions,
+            points: points ? parseInt(points) : undefined,
+            ...(assignment ? { 
+              dateSubmitted: assignment.dateSubmitted,
+              status: assignment.status 
+            } : {
+              dateSubmitted: new Date().toISOString(),
+              status: 'pending'
+            })
+          };
+          
+          if (assignment) {
+            // Update existing assignment
+            updateAssignment({
+              ...assignment,
+              ...assignmentData
+            });
+          } else {
+            // Create new assignment
+            saveAssignment(assignmentData);
+          }
         }
         
         // Reset form
@@ -256,86 +288,90 @@ const UploadForm = ({ classId, assignment, onSuccess, onCancel }: UploadFormProp
       onDragEnter={handleDrag}
       className="space-y-6"
     >
-      <div className="space-y-2">
-        <Label htmlFor="title">
-          Assignment Title
-        </Label>
-        <Input
-          id="title"
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Enter assignment title"
-          required
-        />
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="dueDate">
-            Due Date
-          </Label>
-          <Input
-            id="dueDate"
-            type="date"
-            value={dueDate}
-            onChange={(e) => setDueDate(e.target.value)}
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="dueTime">
-            Due Time
-          </Label>
-          <Input
-            id="dueTime"
-            type="time"
-            value={dueTime}
-            onChange={(e) => setDueTime(e.target.value)}
-            placeholder="23:59"
-          />
-        </div>
-      </div>
-      
-      <div className="flex items-center space-x-2">
-        <input
-          type="checkbox"
-          id="allowLateSubmissions"
-          checked={allowLateSubmissions}
-          onChange={(e) => setAllowLateSubmissions(e.target.checked)}
-          className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-        />
-        <Label htmlFor="allowLateSubmissions" className="text-sm font-normal">
-          Allow submissions after due date
-        </Label>
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="points">
-          Points
-        </Label>
-        <Input
-          id="points"
-          type="number"
-          value={points}
-          onChange={(e) => setPoints(e.target.value)}
-          placeholder="100"
-          min="0"
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="description">
-          Description
-        </Label>
-        <Textarea
-          id="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Enter additional details about the assignment"
-          rows={3}
-        />
-      </div>
+      {!isSubmission && (
+        <>
+          <div className="space-y-2">
+            <Label htmlFor="title">
+              Assignment Title
+            </Label>
+            <Input
+              id="title"
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Enter assignment title"
+              required
+            />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="dueDate">
+                Due Date
+              </Label>
+              <Input
+                id="dueDate"
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="dueTime">
+                Due Time
+              </Label>
+              <Input
+                id="dueTime"
+                type="time"
+                value={dueTime}
+                onChange={(e) => setDueTime(e.target.value)}
+                placeholder="23:59"
+              />
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="allowLateSubmissions"
+              checked={allowLateSubmissions}
+              onChange={(e) => setAllowLateSubmissions(e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+            />
+            <Label htmlFor="allowLateSubmissions" className="text-sm font-normal">
+              Allow submissions after due date
+            </Label>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="points">
+              Points
+            </Label>
+            <Input
+              id="points"
+              type="number"
+              value={points}
+              onChange={(e) => setPoints(e.target.value)}
+              placeholder="100"
+              min="0"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="description">
+              Description
+            </Label>
+            <Textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Enter additional details about the assignment"
+              rows={3}
+            />
+          </div>
+        </>
+      )}
       
       <div 
         className={`relative border-2 border-dashed rounded-lg p-6 transition-all duration-300 ${
@@ -468,9 +504,11 @@ const UploadForm = ({ classId, assignment, onSuccess, onCancel }: UploadFormProp
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 />
               </svg>
-              {assignment ? "Updating..." : "Submitting..."}
+              {isSubmission ? "Submitting..." : assignment ? "Updating..." : "Creating..."}
             </>
-          ) : assignment ? "Update Assignment" : "Submit Assignment"}
+          ) : (
+            isSubmission ? "Submit Assignment" : assignment ? "Update Assignment" : "Create Assignment"
+          )}
         </Button>
       </div>
     </form>

@@ -15,13 +15,19 @@ interface AssignmentListProps {
   onAssignmentUpdate?: () => void;
   isTeacher?: boolean;
   onEditAssignment?: (assignment: Assignment) => void;
+  onSubmitAssignment?: (assignment: Assignment) => void;
+  onlySubmitted?: boolean;
+  currentUserId?: string;
 }
 
 const AssignmentList = ({ 
   classId, 
   onAssignmentUpdate, 
   isTeacher = false,
-  onEditAssignment 
+  onEditAssignment,
+  onSubmitAssignment,
+  onlySubmitted = false,
+  currentUserId
 }: AssignmentListProps) => {
   const { toast } = useToast();
   const [assignments, setAssignments] = useState<Assignment[]>([]);
@@ -32,17 +38,29 @@ const AssignmentList = ({
   useEffect(() => {
     // Simulate loading delay
     const timer = setTimeout(() => {
-      if (classId) {
-        // Filter assignments by classId
-        setAssignments(getAssignments().filter(assignment => assignment.classId === classId));
-      } else {
-        setAssignments(getAssignments());
-      }
+      let filteredAssignments = getAssignments().filter(assignment => {
+        // Filter by classId if provided
+        const matchesClass = classId ? assignment.classId === classId : true;
+        
+        // Filter by submission status if onlySubmitted is true
+        const matchesSubmittedFilter = onlySubmitted 
+          ? assignment.status === 'submitted' || assignment.status === 'graded'
+          : true;
+        
+        // Filter by user ID if currentUserId is provided (for student's submissions)
+        const matchesUserId = currentUserId 
+          ? assignment.studentId === currentUserId
+          : true;
+          
+        return matchesClass && matchesSubmittedFilter && matchesUserId;
+      });
+      
+      setAssignments(filteredAssignments);
       setIsLoading(false);
     }, 800);
 
     return () => clearTimeout(timer);
-  }, [classId]);
+  }, [classId, onlySubmitted, currentUserId]);
 
   const handleDeleteClick = (assignmentId: string) => {
     setSelectedAssignment(assignmentId);
@@ -71,6 +89,12 @@ const AssignmentList = ({
     }
   };
 
+  const handleSubmitClick = (assignment: Assignment) => {
+    if (onSubmitAssignment) {
+      onSubmitAssignment(assignment);
+    }
+  };
+
   return (
     <div>
       {isLoading ? (
@@ -88,6 +112,7 @@ const AssignmentList = ({
                 formatFileSize={formatFileSize}
                 onDelete={isTeacher ? handleDeleteClick : undefined}
                 onEdit={isTeacher ? handleEditClick : undefined}
+                onSubmit={!isTeacher && !onlySubmitted ? handleSubmitClick : undefined}
               />
             ))}
           </div>
@@ -100,6 +125,7 @@ const AssignmentList = ({
               formatDate={formatDate}
               onDelete={isTeacher ? handleDeleteClick : undefined}
               onEdit={isTeacher ? handleEditClick : undefined}
+              onSubmit={!isTeacher && !onlySubmitted ? handleSubmitClick : undefined}
             />
           </div>
         </div>

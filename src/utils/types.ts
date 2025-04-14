@@ -1,3 +1,4 @@
+
 export interface Assignment {
   id: string;
   title: string;
@@ -14,6 +15,7 @@ export interface Assignment {
   dueTime?: string;
   allowLateSubmissions?: boolean;
   points?: number;
+  studentId?: string; // Added to track which student submitted the assignment
 }
 
 export interface LiveClass {

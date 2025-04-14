@@ -1,7 +1,7 @@
 
 import { Assignment } from "@/utils/types";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, FileUp, SendHorizontal, FilePlus } from "lucide-react";
+import { PlusCircle, FileUp, SendHorizontal, FilePlus, Plus } from "lucide-react";
 import AssignmentList from "@/components/AssignmentList";
 import UploadForm from "@/components/UploadForm";
 import { useState, useEffect } from "react";
@@ -121,7 +121,7 @@ const ClassworkTab = ({ classroom }: ClassworkTabProps) => {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <h2 className="text-xl font-medium">Assignments</h2>
             {isTeacher && (
-              <Button onClick={handleCreateAssignment} size="lg" className="gap-2">
+              <Button onClick={handleCreateAssignment} size="lg" className="gap-2 bg-primary hover:bg-primary/90 transition-colors">
                 {showUploadForm && !submittingAssignment && !editingAssignment ? (
                   <>
                     <PlusCircle className="h-4 w-4" />
@@ -129,8 +129,8 @@ const ClassworkTab = ({ classroom }: ClassworkTabProps) => {
                   </>
                 ) : (
                   <>
-                    <FilePlus className="h-4 w-4" />
-                    Create Assignment
+                    <Plus className="h-4 w-4" />
+                    New Assignment
                   </>
                 )}
               </Button>
@@ -138,7 +138,7 @@ const ClassworkTab = ({ classroom }: ClassworkTabProps) => {
           </div>
           
           {showUploadForm && (
-            <Card className="glass rounded-xl p-4 sm:p-6 shadow-md mb-8">
+            <Card className="glass rounded-xl p-4 sm:p-6 shadow-md mb-8 border border-primary/20">
               <h3 className="text-lg font-medium mb-4">
                 {submittingAssignment 
                   ? "Submit Assignment" 

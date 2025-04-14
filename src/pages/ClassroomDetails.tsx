@@ -21,7 +21,7 @@ const ClassroomDetails = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
 
   useEffect(() => {
-    const fetchClassroom = async () => {
+    const fetchClassroom = () => {
       if (!id) {
         setError("Class ID is missing");
         setLoading(false);
@@ -29,8 +29,7 @@ const ClassroomDetails = () => {
       }
 
       try {
-        // Properly await the Promise from getClassroomById
-        const classroomData = await getClassroomById(id);
+        const classroomData = getClassroomById(id);
         if (!classroomData) {
           setError("Class not found");
         } else {

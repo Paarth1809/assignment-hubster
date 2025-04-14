@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { deleteClassroom } from "@/utils/storage";
+import { deleteClassroom, updateClassroom } from "@/utils/storage";
 import { useNavigate } from "react-router-dom";
 import {
   Dialog,
@@ -37,7 +37,17 @@ const SettingsTab = ({ classroom, currentUser }: SettingsTabProps) => {
   const isTeacher = currentUser?.role === 'teacher';
 
   const handleSaveChanges = () => {
-    // In a real app, this would update the classroom in the database
+    // Update the classroom with the new details
+    const updatedClassroom = {
+      ...classroom,
+      name,
+      section: section || undefined,
+      subject: subject || undefined,
+      description: description || undefined,
+    };
+    
+    updateClassroom(updatedClassroom);
+    
     toast({
       title: "Settings saved",
       description: "Your classroom settings have been updated.",

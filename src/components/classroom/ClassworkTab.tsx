@@ -1,7 +1,7 @@
 
 import { Assignment } from "@/utils/types";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, FileUp, SendHorizontal } from "lucide-react";
+import { PlusCircle, FileUp, SendHorizontal, FilePlus } from "lucide-react";
 import AssignmentList from "@/components/AssignmentList";
 import UploadForm from "@/components/UploadForm";
 import { useState, useEffect } from "react";
@@ -121,15 +121,15 @@ const ClassworkTab = ({ classroom }: ClassworkTabProps) => {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <h2 className="text-xl font-medium">Assignments</h2>
             {isTeacher && (
-              <Button onClick={handleCreateAssignment}>
+              <Button onClick={handleCreateAssignment} size="lg" className="gap-2">
                 {showUploadForm && !submittingAssignment && !editingAssignment ? (
                   <>
-                    <PlusCircle className="h-4 w-4 mr-2" />
+                    <PlusCircle className="h-4 w-4" />
                     Cancel
                   </>
                 ) : (
                   <>
-                    <FileUp className="h-4 w-4 mr-2" />
+                    <FilePlus className="h-4 w-4" />
                     Create Assignment
                   </>
                 )}

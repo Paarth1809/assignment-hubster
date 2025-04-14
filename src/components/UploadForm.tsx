@@ -1,4 +1,3 @@
-
 import { useState, useRef, DragEvent, ChangeEvent, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { saveAssignment, updateAssignment } from '@/utils/storage';
@@ -205,14 +204,17 @@ const UploadForm = ({ classId, assignment, onSuccess, onCancel, isSubmission = f
 
         if (isSubmission && assignment) {
           // Update assignment status to 'submitted' when submitting
-          updateAssignment({
+          const updatedAssignment: Assignment = {
             ...assignment,
-            status: 'submitted',
+            status: 'submitted' as const,
             dateSubmitted: new Date().toISOString(),
             fileName: finalFileDetails.fileName,
             fileSize: finalFileDetails.fileSize,
             fileType: finalFileDetails.fileType,
-          });
+            studentId: profile?.id,
+          };
+          
+          updateAssignment(updatedAssignment);
           
           toast({
             title: "Assignment Submitted",
@@ -220,7 +222,7 @@ const UploadForm = ({ classId, assignment, onSuccess, onCancel, isSubmission = f
           });
         } else {
           // Create or update assignment
-          const assignmentData = {
+          const assignmentData: Partial<Assignment> = {
             ...(assignment ? { id: assignment.id } : {}),
             title,
             description: description.trim() || undefined,
@@ -236,7 +238,7 @@ const UploadForm = ({ classId, assignment, onSuccess, onCancel, isSubmission = f
               status: assignment.status 
             } : {
               dateSubmitted: new Date().toISOString(),
-              status: 'pending'
+              status: 'pending' as const
             })
           };
           
@@ -245,10 +247,10 @@ const UploadForm = ({ classId, assignment, onSuccess, onCancel, isSubmission = f
             updateAssignment({
               ...assignment,
               ...assignmentData
-            });
+            } as Assignment);
           } else {
             // Create new assignment
-            saveAssignment(assignmentData);
+            saveAssignment(assignmentData as Assignment);
           }
         }
         

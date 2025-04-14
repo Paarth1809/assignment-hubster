@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getClassroomById } from "@/utils/storage";
@@ -53,7 +54,7 @@ const ClassroomDetails = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="animate-spin h-12 w-12 border-4 border-primary border-t-transparent rounded-full"></div>
       </div>
     );
@@ -61,7 +62,7 @@ const ClassroomDetails = () => {
 
   if (error || !classroom) {
     return (
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-black">
         <Navbar />
         <main className="container mx-auto py-20 px-6">
           <NotFoundContent message={error || "Class not found"} />
@@ -76,7 +77,7 @@ const ClassroomDetails = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-black text-white">
       <Navbar />
       <main>
         <ClassHeader classroom={classroom} />
@@ -87,7 +88,7 @@ const ClassroomDetails = () => {
               onTabChange={handleTabChange}
               classroom={classroom} 
             />
-            <TabsContent value="dashboard">
+            <TabsContent value="dashboard" className="text-white">
               <StreamTab classroom={classroom} assignments={[]} />
             </TabsContent>
             {/* Other tab contents would go here */}

@@ -1,56 +1,61 @@
 
+import { useState } from "react";
 import { Assignment } from "@/utils/types";
-import { FileText } from "lucide-react";
+import { FileText, Users } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import GradesTable from "@/components/grades/GradesTable";
+import EmptyGradesState from "@/components/grades/EmptyGradesState";
+import AddGradeDialog from "@/components/grades/AddGradeDialog";
+import GradesAnalytics from "@/components/grades/GradesAnalytics";
 
 interface GradesTabProps {
   assignments: Assignment[];
+  classroomId: string;
+  teacherId?: string;
 }
 
-const GradesTab = ({ assignments }: GradesTabProps) => {
+const GradesTab = ({ assignments, classroomId, teacherId }: GradesTabProps) => {
+  const { user, profile } = useAuth();
+  const [activeTab, setActiveTab] = useState("grades");
+
+  const isTeacher = profile?.role === "teacher" || (teacherId && user?.id === teacherId);
+
   return (
     <div>
-      <h2 className="text-xl font-medium mb-6">Grades</h2>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-medium">Grades</h2>
+        {isTeacher && <AddGradeDialog classroomId={classroomId} />}
+      </div>
       
-      {assignments.length > 0 ? (
-        <div className="glass rounded-xl shadow-md overflow-hidden">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left p-4">Assignment</th>
-                <th className="text-left p-4">Submitted</th>
-                <th className="text-right p-4">Grade</th>
-              </tr>
-            </thead>
-            <tbody>
-              {assignments.map((assignment) => (
-                <tr key={assignment.id} className="border-b hover:bg-muted/20 transition-colors">
-                  <td className="p-4">
-                    <span className="font-medium">{assignment.title}</span>
-                  </td>
-                  <td className="p-4 text-muted-foreground">
-                    {new Date(assignment.dateSubmitted).toLocaleDateString()}
-                  </td>
-                  <td className="p-4 text-right">
-                    {assignment.grade ? (
-                      <span className="font-medium">{assignment.grade}</span>
-                    ) : (
-                      <span className="text-muted-foreground">Not graded</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div className="text-center py-12 glass rounded-xl shadow-md">
-          <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-medium mb-2">No assignments yet</h3>
-          <p className="text-muted-foreground max-w-md mx-auto">
-            Grades will appear here once you have submitted assignments and they have been graded.
-          </p>
-        </div>
-      )}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="mb-6">
+          <TabsTrigger value="grades">
+            <FileText className="h-4 w-4 mr-2" />
+            Grades Table
+          </TabsTrigger>
+          <TabsTrigger value="analytics">
+            <Users className="h-4 w-4 mr-2" />
+            Analytics
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="grades">
+          {assignments.length > 0 ? (
+            <GradesTable assignments={assignments} />
+          ) : (
+            <EmptyGradesState />
+          )}
+        </TabsContent>
+        
+        <TabsContent value="analytics">
+          <GradesAnalytics 
+            classroomId={classroomId}
+            studentId={user?.id}
+            isTeacher={isTeacher}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

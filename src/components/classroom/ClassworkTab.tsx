@@ -4,21 +4,36 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle, FileUp } from "lucide-react";
 import AssignmentList from "@/components/AssignmentList";
 import UploadForm from "@/components/UploadForm";
-import { useState } from "react";
-import { getAssignmentsForClass } from "@/utils/storage";
+import { useState, useEffect } from "react";
+import { getAssignmentsForClass, saveAssignment } from "@/utils/storage/assignments";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
 
 interface ClassworkTabProps {
-  classId: string;
-  isTeacher?: boolean;
+  classroom?: { id: string; teacherId?: string };
 }
 
-const ClassworkTab = ({ classId, isTeacher = false }: ClassworkTabProps) => {
+const ClassworkTab = ({ classroom }: ClassworkTabProps) => {
   const { toast } = useToast();
+  const { user, profile } = useAuth();
   const [showUploadForm, setShowUploadForm] = useState(false);
-  const [assignments, setAssignments] = useState<Assignment[]>(getAssignmentsForClass(classId));
+  const [currentAssignments, setCurrentAssignments] = useState<Assignment[]>([]);
   const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(null);
+  
+  const classId = classroom?.id || '';
+  const isTeacher = profile?.id === classroom?.teacherId;
+
+  // Load assignments when the component mounts or when classId changes
+  useEffect(() => {
+    if (classId) {
+      refreshAssignments();
+    }
+  }, [classId]);
+
+  const refreshAssignments = () => {
+    setCurrentAssignments(getAssignmentsForClass(classId));
+  };
 
   const handleCreateAssignment = () => {
     setEditingAssignment(null);
@@ -53,6 +68,20 @@ const ClassworkTab = ({ classId, isTeacher = false }: ClassworkTabProps) => {
     setEditingAssignment(null);
   };
 
+  const handleFormSuccess = () => {
+    setShowUploadForm(false);
+    setEditingAssignment(null);
+    // Refresh assignments list
+    refreshAssignments();
+    
+    toast({
+      title: editingAssignment ? "Assignment Updated" : "Assignment Created",
+      description: editingAssignment 
+        ? "The assignment has been successfully updated." 
+        : "The assignment has been successfully created and is now available to your students.",
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -82,17 +111,7 @@ const ClassworkTab = ({ classId, isTeacher = false }: ClassworkTabProps) => {
           <UploadForm 
             classId={classId} 
             assignment={editingAssignment}
-            onSuccess={() => {
-              setShowUploadForm(false);
-              setEditingAssignment(null);
-              setAssignments(getAssignmentsForClass(classId));
-              toast({
-                title: editingAssignment ? "Assignment Updated" : "Assignment Created",
-                description: editingAssignment 
-                  ? "The assignment has been successfully updated." 
-                  : "The assignment has been successfully created and is now available to your students.",
-              });
-            }} 
+            onSuccess={handleFormSuccess} 
             onCancel={handleFormClose}
           />
         </Card>
@@ -100,7 +119,7 @@ const ClassworkTab = ({ classId, isTeacher = false }: ClassworkTabProps) => {
       
       <AssignmentList 
         classId={classId} 
-        onAssignmentUpdate={() => setAssignments(getAssignmentsForClass(classId))}
+        onAssignmentUpdate={refreshAssignments}
         isTeacher={isTeacher}
         onEditAssignment={isTeacher ? handleEditAssignment : undefined}
       />

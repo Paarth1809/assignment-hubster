@@ -1,3 +1,4 @@
+
 import { Assignment } from "../types";
 import { getLocalStorage, setLocalStorage } from "./base";
 
@@ -55,8 +56,8 @@ export const createAssignment = (assignment: Assignment): Assignment => {
 
 // Save an assignment from form data
 export const saveAssignment = (assignmentData: any): Assignment => {
-  // Generate a random ID
-  const id = Math.random().toString(36).substring(2, 10);
+  // Generate a random ID if one doesn't exist
+  const id = assignmentData.id || Math.random().toString(36).substring(2, 10);
   
   const newAssignment: Assignment = {
     id,
@@ -65,15 +66,21 @@ export const saveAssignment = (assignmentData: any): Assignment => {
     fileName: assignmentData.fileName,
     fileSize: assignmentData.fileSize,
     fileType: assignmentData.fileType,
-    dateSubmitted: new Date().toISOString(),
-    status: 'pending',
+    dateSubmitted: assignmentData.dateSubmitted || new Date().toISOString(),
+    status: assignmentData.status || 'pending',
     classId: assignmentData.classId,
     dueDate: assignmentData.dueDate,
     allowLateSubmissions: assignmentData.allowLateSubmissions,
     points: assignmentData.points
   };
   
-  return createAssignment(newAssignment);
+  if (assignmentData.id) {
+    // Update existing assignment
+    return updateAssignment(newAssignment);
+  } else {
+    // Create new assignment
+    return createAssignment(newAssignment);
+  }
 };
 
 // Update an assignment

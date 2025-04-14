@@ -1,9 +1,9 @@
-
 import { createContext, useContext, useEffect, useState } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { AuthUser, UserProfile } from '@/utils/types';
 import { getCurrentUser, initializeDefaultUser, saveUserProfile } from '@/utils/storage';
+import { syncUserProfile } from '@/services/ProfileService';
 
 interface AuthContextProps {
   user: AuthUser | null;
@@ -44,43 +44,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Get or create user profile when auth user changes
   useEffect(() => {
-    if (user) {
-      const storedProfile = getCurrentUser();
-      if (storedProfile && storedProfile.id === user.id) {
-        setProfile(storedProfile);
+    const loadUserProfile = async () => {
+      if (user) {
+        // First check for profile in local storage
+        const storedProfile = getCurrentUser();
         
-        // Apply saved theme preference if available
-        if (storedProfile.preferences?.theme) {
-          applyTheme(storedProfile.preferences.theme);
+        if (storedProfile && storedProfile.id === user.id) {
+          // Sync with Supabase profile
+          const syncedProfile = await syncUserProfile(storedProfile);
+          setProfile(syncedProfile);
+          saveUserProfile(syncedProfile);
+          
+          // Apply saved theme preference if available
+          if (syncedProfile.preferences?.theme) {
+            applyTheme(syncedProfile.preferences.theme);
+          }
+        } else {
+          // Create a new profile based on auth data
+          const newProfile: UserProfile = {
+            id: user.id,
+            name: user.user_metadata?.name || user.email.split('@')[0],
+            email: user.email,
+            role: 'student',
+            enrolledClasses: [],
+            preferences: {
+              theme: 'system',
+              language: 'en',
+              notifications: {
+                email: false,
+                browser: false
+              }
+            }
+          };
+          
+          // Sync with Supabase
+          const syncedProfile = await syncUserProfile(newProfile);
+          saveUserProfile(syncedProfile);
+          setProfile(syncedProfile);
         }
       } else {
-        // Create a new profile based on auth data
-        const newProfile: UserProfile = {
-          id: user.id,
-          name: user.user_metadata?.name || user.email.split('@')[0],
-          email: user.email,
-          role: 'student',
-          enrolledClasses: [],
-          preferences: {
-            theme: 'system',
-            language: 'en',
-            notifications: {
-              email: false,
-              browser: false
-            }
-          }
-        };
-        saveUserProfile(newProfile);
-        setProfile(newProfile);
+        // Initialize default user if not authenticated
+        const defaultUser = initializeDefaultUser();
+        setProfile(defaultUser);
+        
+        // Apply system theme preference
+        applyTheme('system');
       }
-    } else {
-      // Initialize default user if not authenticated
-      const defaultUser = initializeDefaultUser();
-      setProfile(defaultUser);
-      
-      // Apply system theme preference
-      applyTheme('system');
-    }
+    };
+    
+    loadUserProfile();
   }, [user]);
 
   const applyTheme = (theme: 'light' | 'dark' | 'system') => {
@@ -112,32 +124,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       email,
       password,
       options: {
-        data: { name }
+        data: { name, role }
       }
     });
-
-    if (!error) {
-      // Create user profile
-      const userResponse = await supabase.auth.getUser();
-      if (userResponse.data.user) {
-        const newProfile: UserProfile = {
-          id: userResponse.data.user.id,
-          name,
-          email,
-          role,
-          enrolledClasses: [],
-          preferences: {
-            theme: 'system',
-            language: 'en',
-            notifications: {
-              email: false,
-              browser: false
-            }
-          }
-        };
-        saveUserProfile(newProfile);
-      }
-    }
 
     return { error };
   };
@@ -178,6 +167,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       resolve();
     });
+    
+    // Also update Supabase profile if relevant fields are updated
+    if (profile && (updatedProfileData.name || updatedProfileData.avatar)) {
+      try {
+        await supabase
+          .from('profiles')
+          .update({
+            full_name: updatedProfileData.name || profile.name,
+            avatar_url: updatedProfileData.avatar || profile.avatar,
+            role: updatedProfileData.role || profile.role,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', profile.id);
+      } catch (error) {
+        console.error("Error updating Supabase profile:", error);
+      }
+    }
   };
 
   return (

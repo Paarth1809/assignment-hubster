@@ -1,4 +1,3 @@
-
 export interface Assignment {
   id: string;
   title: string;
@@ -74,4 +73,14 @@ export interface AuthUser {
     name?: string;
     avatar_url?: string;
   };
+}
+
+export interface Announcement {
+  id: string;
+  title: string;
+  content: string;
+  dateCreated: string;
+  author: string;
+  authorId: string;
+  classId: string;
 }

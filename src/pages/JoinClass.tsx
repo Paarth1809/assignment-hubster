@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, Navigate } from "react-router-dom";
 import { joinClassroom, getClassroomByCode } from "@/utils/storage";
@@ -80,7 +79,7 @@ const JoinClass = () => {
     }
 
     try {
-      const result = await joinClassroom(code.toUpperCase(), user.id);
+      const result = await joinClassroom(code.toUpperCase());
       
       if (result) {
         toast({

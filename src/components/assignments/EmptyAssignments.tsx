@@ -1,7 +1,23 @@
 
 import React from 'react';
+import { Button } from "@/components/ui/button";
+import { FilePlus } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-const EmptyAssignments = () => {
+interface EmptyAssignmentsProps {
+  isTeacher?: boolean;
+  classId?: string;
+}
+
+const EmptyAssignments = ({ isTeacher = false, classId }: EmptyAssignmentsProps) => {
+  const navigate = useNavigate();
+
+  const handleCreateAssignment = () => {
+    if (classId) {
+      navigate(`/classroom/${classId}?tab=classwork`);
+    }
+  };
+
   return (
     <div className="text-center py-12 glass rounded-xl">
       <svg 
@@ -24,10 +40,23 @@ const EmptyAssignments = () => {
       </svg>
       <h3 className="text-lg font-medium">No assignments yet</h3>
       <p className="text-muted-foreground mt-1 mb-6 max-w-md mx-auto">
-        There are no assignments in this class yet. Create your first assignment to get started.
+        {isTeacher 
+          ? "Create your first assignment to get started." 
+          : "There are no assignments in this class yet."}
       </p>
+      {isTeacher && (
+        <Button 
+          onClick={handleCreateAssignment} 
+          size="lg" 
+          className="gap-2 bg-primary hover:bg-primary/90 transition-colors"
+        >
+          <FilePlus className="h-4 w-4" />
+          Create Assignment
+        </Button>
+      )}
     </div>
   );
 };
 
 export default EmptyAssignments;
+

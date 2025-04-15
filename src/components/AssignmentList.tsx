@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { getAssignments, deleteAssignment } from '@/utils/storage';
 import { Assignment } from '@/utils/types';
@@ -100,7 +99,10 @@ const AssignmentList = ({
       {isLoading ? (
         <AssignmentSkeleton />
       ) : assignments.length === 0 ? (
-        <EmptyAssignments />
+        <EmptyAssignments 
+          isTeacher={isTeacher} 
+          classId={classId} 
+        />
       ) : (
         <div className="glass rounded-xl shadow-md overflow-hidden">
           <div className="grid gap-4 p-4 md:hidden">

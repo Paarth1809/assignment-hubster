@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { getClassroomById } from '@/utils/storage';
 import { getAssignmentsForClass } from '@/utils/storage/assignments';
@@ -24,12 +24,22 @@ import { Tabs, TabsContent } from '@/components/ui/tabs';
 const ClassroomDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, profile } = useAuth();
   const [classroom, setClassroom] = useState<Classroom | null>(null);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isTeacher, setIsTeacher] = useState(false);
   const [activeTab, setActiveTab] = useState("stream");
+
+  // Check URL parameters for tab selection
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tabParam = params.get('tab');
+    if (tabParam && ['stream', 'classwork', 'grades', 'live', 'people', 'settings', 'dashboard'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [location.search]);
 
   useEffect(() => {
     const fetchClassroomDetails = async () => {
@@ -73,6 +83,13 @@ const ClassroomDetails = () => {
       setAssignments(assignmentsData);
     }
   }, [activeTab, id]);
+  
+  // Update URL when tab changes
+  const handleTabChange = (newTab: string) => {
+    setActiveTab(newTab);
+    // Update URL without full page reload
+    navigate(`/classroom/${id}?tab=${newTab}`, { replace: true });
+  };
 
   if (isLoading) {
     return (
@@ -127,7 +144,7 @@ const ClassroomDetails = () => {
             <ClassTabs 
               classroom={classroom} 
               activeTab={activeTab} 
-              onTabChange={setActiveTab}
+              onTabChange={handleTabChange}
             >
               <TabsContent value="stream">
                 <StreamTab classroom={classroom} />

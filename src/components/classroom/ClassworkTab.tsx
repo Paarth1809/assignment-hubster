@@ -129,7 +129,7 @@ const ClassworkTab = ({ classroom }: ClassworkTabProps) => {
                   </>
                 ) : (
                   <>
-                    <Plus className="h-4 w-4" />
+                    <FilePlus className="h-4 w-4" />
                     Create Assignment
                   </>
                 )}

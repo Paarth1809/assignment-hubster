@@ -1,3 +1,4 @@
+
 import { Assignment } from "../types";
 import { getLocalStorage, setLocalStorage } from "./base";
 
@@ -72,6 +73,7 @@ export const saveAssignment = (assignmentData: any): Assignment => {
     status: assignmentData.status || 'pending',
     classId: assignmentData.classId,
     dueDate: assignmentData.dueDate,
+    dueTime: assignmentData.dueTime,
     allowLateSubmissions: assignmentData.allowLateSubmissions,
     locked: assignmentData.locked,
     points: assignmentData.points,

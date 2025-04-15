@@ -1,4 +1,3 @@
-
 import { Assignment } from "./types";
 
 // Format date function
@@ -35,4 +34,34 @@ export const getStatusColor = (status: Assignment['status']): string => {
     default:
       return 'text-gray-500 bg-gray-50 dark:bg-gray-900/20';
   }
+};
+
+// Check if an assignment is past due
+export const isAssignmentPastDue = (assignment: Assignment): boolean => {
+  if (!assignment.dueDate) return false;
+  
+  const now = new Date();
+  const dueDate = new Date(assignment.dueDate);
+  
+  return now > dueDate;
+};
+
+// Check if an assignment is locked
+export const isAssignmentLocked = (assignment: Assignment): boolean => {
+  return assignment.locked === true;
+};
+
+// Check if submissions are allowed for an assignment
+export const canSubmitAssignment = (assignment: Assignment): boolean => {
+  // If assignment is locked, submission is not allowed
+  if (isAssignmentLocked(assignment)) return false;
+  
+  // If there's no due date, submission is allowed
+  if (!assignment.dueDate) return true;
+  
+  // If the assignment allows late submissions, submission is always allowed
+  if (assignment.allowLateSubmissions) return true;
+  
+  // Otherwise, check if it's past the due date
+  return !isAssignmentPastDue(assignment);
 };
